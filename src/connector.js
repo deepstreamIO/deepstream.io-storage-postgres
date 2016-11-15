@@ -69,6 +69,7 @@ module.exports = class Connector extends events.EventEmitter {
     this._writeOperations = {}
     this._initialise()
     this._flushInterval = setInterval( this._flushWrites.bind( this ), this.options.writeInterval )
+    this.type = `postgres connection to ${this.options.host} and database ${this.options.database}`
   }
 
   /**
