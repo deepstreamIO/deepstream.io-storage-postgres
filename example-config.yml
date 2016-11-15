@@ -1,5 +1,19 @@
 plugins:
   storage:
-    name: <name>
+    name: postgres
     options:
-      <KEY>: "${ENVIRONMENT_VARIABLE}"
+      user: some-user
+      database: some-database
+      password: some-password
+      host: localhost
+      port: 5432
+      schema: ds
+      max: 10
+      idleTimeoutMillis: 30000
+      writeInterval: 200
+      notifications:
+        CREATE_TABLE: true
+        DESTROY_TABLE: true
+        INSERT: true
+        UPDATE: false
+        DELETE: true
