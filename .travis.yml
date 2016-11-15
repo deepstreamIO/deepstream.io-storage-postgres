@@ -13,6 +13,9 @@ env:
 # Do not insert any code under here without making sures it's in publishingtest first
 language: node_js
 
+services:
+  - postgresql
+
 addons:
   postgresql: "9.5"
   apt:
@@ -30,14 +33,7 @@ matrix:
   include:
     - node_js: "6.9.1"
       os: osx
-
-before_install:
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-     brew rm postgis --force;
-     brew install postgis --force;
-     pg_ctl -w start -l postgres.log --pgdata /usr/local/var/postgres;
-     createuser -s postgres;
-   fi
+      osx_image: xcode8
 
 script:
   - createdb travis_ci_test
@@ -45,9 +41,6 @@ script:
   - curl -o package.sh -L https://raw.githubusercontent.com/deepstreamIO/deepstream.io-connector-publishingtest/master/scripts/package.sh
   - chmod 555 package.sh
   - ./package.sh
-
-services:
-  - postgresql
 
 deploy:
   - provider: s3
