@@ -31,6 +31,14 @@ matrix:
     - node_js: "6.9.1"
       os: osx
 
+install:
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+     brew rm postgis --force;
+     brew install postgis --force;
+     pg_ctl -w start -l postgres.log --pgdata /usr/local/var/postgres;
+     createuser -s postgres;
+   fi
+
 script:
   - createdb travis_ci_test
   - npm run test
