@@ -1,0 +1,58 @@
+env:
+  global:
+    - CXX=g++-4.8
+
+# Do not insert any code under here without making sures it's in publishingtest first
+language: node_js
+
+plugins:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - g++-4.8
+
+node_js:
+  - "stable"
+  - "4.4.5"
+
+matrix:
+  include:
+    - node_js: "4.4.5"
+      os: osx
+
+script:
+  - npm run test
+  - curl -o package.sh -L https://raw.githubusercontent.com/deepstreamIO/deepstream.io-connector-publishingtest/master/scripts/package.sh
+  - chmod 555 package.sh
+  - ./package.sh
+
+deploy:
+  - provider: s3
+    access_key_id:
+      secure: <REPLACE ME>
+    secret_access_key:
+      secure: <REPLACE ME>
+    bucket: ds-server-artifacts
+    skip_cleanup: true
+    acl: public_read
+    local_dir: build
+    upload-dir: $TRAVIS_REPO_SLUG
+  - provider: releases
+    skip_cleanup: true
+    api_key:
+      secure: <REPLACE ME>
+    file_glob: true
+    file:
+      - "build/*.tar.gz"
+      - "build/*.zip"
+    on:
+      tags: true
+
+after_deploy:
+  - curl -o test.sh -L https://raw.githubusercontent.com/deepstreamIO/deepstream.io-connector-publishingtest/master/scripts/test.sh
+  - chmod 555 test.sh
+  - ./test.sh
+
+after_script:
+  - "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"

@@ -1,0 +1,40 @@
+{
+  "name": "deepstream.io-storage-postgres",
+  "version": "1.0.0",
+  "description": "A deepstream.io storage connector for use with deepstream",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha",
+    "watch": "mocha -w"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepstreamIO/deepstream.io-storage-postgres.git"
+  },
+  "author": "deepstreamHub GmbH",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/deepstreamIO/deepstream.io-storage-postgres/issues"
+  },
+  "keywords": [
+    "postgres",
+    "postgresql",
+    "realtime search",
+    "realtime",
+    "deepstream.io"
+  ],
+  "license": "Apache-2.0",
+  "homepage": "https://deepstream.io/tutorials/integrations/db-postgres/",
+  "dependencies": {
+    "pg": "^6.1.0",
+    "pg-escape": "^0.2.0"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "coveralls": "^2.11.9",
+    "eslint": "^2.11.1",
+    "eslint-config-airbnb": "^3.1.0",
+    "istanbul": "^0.4.3",
+    "mocha": "^2.5.2"
+  }
+}
