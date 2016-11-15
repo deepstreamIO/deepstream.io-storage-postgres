@@ -2,7 +2,7 @@
   "name": "deepstream.io-storage-postgres",
   "version": "1.0.0",
   "description": "A deepstream.io storage connector for use with deepstream",
-  "main": "index.js",
+  "main": "src/connector.js",
   "scripts": {
     "test": "mocha",
     "watch": "mocha -w"
