@@ -291,7 +291,7 @@ module.exports = class Connector extends events.EventEmitter {
    */
   _checkOptions( options ) {
     this._checkOption( 'user', 'string' )
-    this._checkOption( 'password', 'string' )
+    //this._checkOption( 'password', 'string' )
     this._checkOption( 'host', 'string' )
     this._checkOption( 'port', 'number', 5432 )
     this._checkOption( 'max', 'number', 10 )

@@ -55,7 +55,7 @@ deploy:
   - provider: releases
     skip_cleanup: true
     api_key:
-      secure: <REPLACE ME>
+      secure: "J5m0rbf3Z+ojtgr0LAwzsleqbFhCnnfXejwlgKaWmFiBt7tLHnGBXGZkIxf4oLw8Fy0d5yMyya5dVteabeHbpw56pP8F+1IBQs5AvLebkzazW4VZVWUozmm+EFY4DfH+Fv/sQZJ4LO7/DTJKPdn0q9k/B7XBs0FUL5+2BSIZf4Ttb3xuS3sruCbiehkDGNMzm7c7KPRkjioT6k8fFoK2ts4BBELzxWCipHKfJg904SLy+C7c9GmXNsJXhF5PBr/oGQ5LSxoy60GpTEr8txt2i0a3S3t4l+BJoh6dlunSRJog8vi59+5oCEErrXi2m1QKZAAyVh3/+fNcYc2v+xgvwFvJrytz5lpkMMBQOXxpvQ+GVk615YFV13cBRuEX9qi2tBk6DWDkRyjsIreCvG/277SPBzldtVge1KevU61+qOBdsSIVbtBgSAttlnoMpFvVRW/kZFfxc+JLxNQJXJZr91ieVTzFtdkOzaiKTin4eeLpG6ULlQQ2w5JHzpld+eRPhsBAd5BptqDybiyVUvBCOx154gx2XfZhy3OYikW4FtzSWBUUwz64O+QKi2LfG36VMhLoW8/awu1UUCo6Es+Tpy9I4pv7lLJDGg0ME+JrUNujaVdaswHEOGXc4k5v069k/SRdYidLfe5nczv0oq1dqgN4WSrecN1tRxLliMU95xE="
     file_glob: true
     file:
       - "build/*.tar.gz"
