@@ -1,11 +1,20 @@
+sudo: required
+dist: trusty
+
 env:
   global:
     - CXX=g++-4.8
+    - PGHOST=localhost
+    - PGPORT=5432
+    - PGUSER=postgres
+    - PGPASSWORD=
+    - PGDATABASE=travis_ci_test
 
 # Do not insert any code under here without making sures it's in publishingtest first
 language: node_js
 
-plugins:
+addons:
+  postgresql: "9.5"
   apt:
     sources:
     - ubuntu-toolchain-r-test
@@ -14,25 +23,30 @@ plugins:
 
 node_js:
   - "stable"
-  - "4.4.5"
+  - "6.9.1"
+  - "4"
 
 matrix:
   include:
-    - node_js: "4.4.5"
+    - node_js: "6.9.1"
       os: osx
 
 script:
+  - createdb travis_ci_test
   - npm run test
   - curl -o package.sh -L https://raw.githubusercontent.com/deepstreamIO/deepstream.io-connector-publishingtest/master/scripts/package.sh
   - chmod 555 package.sh
   - ./package.sh
 
+services:
+  - postgresql
+
 deploy:
   - provider: s3
     access_key_id:
-      secure: <REPLACE ME>
+      secure: "muLPLlK2mr6yF7UOqRZs6P5GWgf3RBQ6zWDz3QqUQZVaylgAYQQM55WXJTHtj8HfFkbStUYRgkhaV2IThcZeaEWDPOosiQ/6J58jKjexM3v4DoPHjRmIMZ+mtGd8OvEAG/zqfrXbJrag/mZD0Srt/80EJHe8eV+ePnZ/0E/KLFX8snXwQqIli1MZBnYVhzbrELYn6ROSHkB35YMYlpXuQF+k7qdwUn33rUiGlwK3T7W5VyjLROW5Q/rqONnskyQfRTRGJU+D2kyLIIsDSwLeiI6W5zAhQmFD9IOdYqrpJB30Jpao2lKoxYMNbTqGcqPDyonWtMSOanZvT7ECxm37ytnTcqjTk7IA1wbOMq1uGmGwe4V4YH3+RkHWO3S4XF3E6f7bb+ZhtWqe/48vZZCjr/laZgHt+dtpkUGMnGZqXf3gitvDJ/VipB+j+8hbO+axflQxkh/Lqo3wlTWVyy2wSqtYLhO8/YLjlJ0YnKIiXCb6nRqNd4N2vnufvl4s6W3MjPsz0d3GO97SHJwlRziV6BS4dvanBUlnzAqJ9iIHlAMzk3kXbIJolQd/rxq7xTnrHzSqiX5vJYv1XnIN1pl5u5RnxKafMqYd3pfWofZNg9NGJMcQrAz9okgZO1wcD9rGbWtyOPODKAO6gckYT3FhfOTFty4dJTCEqJqga057tIU="
     secret_access_key:
-      secure: <REPLACE ME>
+      secure: "D8LjmeTFVN5sKvwaQ+57R35cvVauWUOetMkLsLwaXsZGBXL3HYjn1AcRSWCHppp2G3oFf8pG3Emot06mE8t9Epvi2jH1FLgX3aLALEoV5c/DQP9u+9CpKIrPLaMznN2k0zVMIGIJdNvzSH2eALKICA82mT6h7uIGnV61J13dAHlYh/TkTwugD8hUfJAW0BiSEAt0nYYPwVXeHy7T5I5gO8st4uBKdpuePkZNc6fttRHr6j5eFVd0SExevue04jNQw3KB0XlpQVs+TTzC3AyG/+yf34beLtKjKTtmH8is8tT1aFQfXJXKLr2Ysk+PvWBnYFhjwFc9gnAbVzMQ0+r9uD30lPOBNomA5zMWTfePc/DJHBGzvp4Xml8CwPT2cmCWmb1MayCdxa6ydWmk1cOjPG7HdX5hTFmbjJn62arYHDEs0R0tt2lqBZ6phYfdI2Kd/J8erlIVjQ7sGGRPhxWhh4k//vV8P142yYytvmqlaXH7NghHn8Az0fNzdeauUMIIrwc/Jk+OKgiWz0KAo5ZNcvmwqp3xorBBvAMeIWnJs622/iJ/7pX22psD7OtUzMEe0Bv89JTdDAaB3zhaySBQf2X/+XRXb6bNZTFP2WCrXRjUoaKuSbo9VVIN2KLG0YQAG1wOZHyc8vdy9L2F6sUuoYPiSvUJirKg4bOTi99j4DY="
     bucket: ds-server-artifacts
     skip_cleanup: true
     acl: public_read

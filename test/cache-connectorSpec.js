@@ -4,14 +4,13 @@
 const expect = require('chai').expect
 const DbConnector = require('../src/connector')
 const EventEmitter = require('events').EventEmitter
-const APP_ID = 'aaaaab'
 
 const settings = {
-  user: process.env.PG_USER,
-  database: process.env.PG_DB,
-  password: process.env.PG_PASSWORD,
-  host: process.env.PG_HOST,
-  port: parseInt( process.env.PG_PORT, 10 ),
+  user: process.env.PGUSER,
+  database: process.env.PGDATABASE,
+  password: process.env.PGPASSWORD,
+  host: process.env.PGHOST,
+  port: parseInt( process.env.PGPORT, 10 ),
   max: 10,
   idleTimeoutMillis: 30000
 }
