@@ -254,6 +254,7 @@ module.exports = class Connector extends events.EventEmitter {
   query( query, callback, args, silent ) {
     this._connectionPool.connect( ( error, client, done ) => {
       this._checkError( error, 'failed to get connection from the pool' )
+      if ( error ) return callback( error )
       client.query( query, args || [], ( error, result ) => {
         done()
         if( !silent ) {
