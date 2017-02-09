@@ -1,6 +1,7 @@
 'use strict'
 
 const UNDEFINED_TABLE = '42P01'
+const INTERNAL_ERROR = 'XX000'
 const DATABASE_IS_STARTING_UP = '57P03'
 const CONNECTION_REFUSED = 'ECONNREFUSED'
 const events = require( 'events' )
@@ -347,7 +348,15 @@ module.exports = class Connector extends events.EventEmitter {
   _initialise() {
     this.query( this.statements.initDb( this.options.schema ), ( error, result ) => {
       if( error ) {
-        return this._initialise()
+        // retry for errors caused by concurrent initialisation
+        // or when the DB can't be reached (e.g. it's still starting up in a Docker setup)
+        if( error.code === INTERNAL_ERROR ||
+            error.code === DATABASE_IS_STARTING_UP ||
+            error.code === CONNECTION_REFUSED ) {
+          return this._initialise()
+        } else {
+          throw error
+        }
       }
       utils.checkVersion( result.rows[ 0 ].version )
       this.isReady = true
