@@ -1,4 +1,6 @@
 # deepstream.io-storage-postgres
+
+[![Greenkeeper badge](https://badges.greenkeeper.io/deepstreamIO/deepstream.io-storage-postgres.svg)](https://greenkeeper.io/)
 Postgres Database connector for deepstream.io
 
 This connector can be installed via the deepstream command line interface via
