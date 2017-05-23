@@ -4,7 +4,7 @@
   "description": "A deepstream.io storage connector for use with deepstream",
   "main": "src/connector.js",
   "scripts": {
-    "test": "mocha",
+    "test": "mocha --timeout 40000",
     "watch": "mocha -w"
   },
   "repository": {
