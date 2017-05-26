@@ -12,11 +12,19 @@ const settings = {
   host: process.env.PGHOST,
   port: parseInt( process.env.PGPORT, 10 ),
   max: 10,
-  idleTimeoutMillis: 30000
+  idleTimeoutMillis: 30000,
+  notifications: {
+    CREATE_TABLE: false,
+    DESTROY_TABLE: false,
+    INSERT: false,
+    UPDATE: false,
+    DELETE: false
+  }
 }
 
 
-function timeWrites( dbConnector, writes, subjects, cb ) {
+function timeWrites( dbConnector, writes, subjects, cb, base ) {
+  base = base || 0
   const startTime = process.hrtime()
   const data = {  _d: { v: 10 }, 
     someVal: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus a venenatis odio, ac pharetra lacus. Donec scelerisque aliquet odio, ac dapibus erat feugiat non. Phasellus tempor rhoncus interdum. Donec semper volutpat dolor, non pharetra diam facilisis vitae. Fusce pretium et nisl semper pretium. Vivamus maximus odio accumsan eros malesuada vehicula. Donec sed ipsum sagittis, iaculis turpis eu, elementum eros. Nullam sit amet fringilla urna. Nam eleifend interdum purus vel venenatis. Pellentesque in ipsum nisl. Morbi id dictum ex, vitae facilisis diam. Ut maximus rutrum dictum.  Sed condimentum, erat eget venenatis suscipit, quam nulla dignissim nisi, in condimentum orci diam quis lectus. Nullam iaculis pulvinar euismod. Nullam porttitor, tortor eu fermentum facilisis, urna eros cursus risus, non feugiat tellus metus in enim. Suspendisse quis mauris augue. Nullam efficitur condimentum vulputate. Ut eget feugiat odio. Cras molestie massa at lacus interdum, sed posuere tortor pharetra. Curabitur urna est, ultricies eget lectus eu.'
@@ -33,8 +41,31 @@ function timeWrites( dbConnector, writes, subjects, cb ) {
   }
   for( var i = 0; i < writes; i++ ) {
     data._d.v = i
-    dbConnector.set( 'perf/_' + ( i % subjects ), data, onComplete )
+    dbConnector.set( 'perf/_' + ( base + ( i % subjects ) ), data, onComplete )
   }
+}
+
+function pad( val ) {
+  return val + '          '.substr(0, 10 - val.toString().length)
+}
+
+function runTests( tests, done, dbConnector, base ) {
+  var i = 0
+  console.log( `${pad('writes')} ${pad('subjects')} ${'time(ms)'}` )
+  function next () {
+    var writes = tests[ i ].writes;
+    var subjects = tests[ i ].subjects;
+    timeWrites( dbConnector, writes, subjects, ( err, time ) => {
+      console.log( `${pad(writes)} ${pad( subjects )} ${time.toFixed( 2 )}` )
+      i++
+      if( i < tests.length ) {
+        setTimeout( next, 50 )
+      } else {
+        done()
+      }
+    }, base )
+  }
+  next();
 }
 
 
@@ -47,6 +78,10 @@ describe.only( 'achieves expected writes per second', () => {
     dbConnector.on( 'ready', done )
   })
 
+  it( 'deletes all existing rows', done => {
+    dbConnector.query( 'DROP TABLE ds.perf', done )
+  })
+
   it( 'writes 1 record to ensure table exists', ( done ) => {
     timeWrites( dbConnector, 100, 10, ( err, time ) => {
       expect( err ).to.equal( null )
@@ -54,105 +89,63 @@ describe.only( 'achieves expected writes per second', () => {
     })
   })
 
-  it( 'writes 100 updates across 10 subjects', ( done ) => {
-    var writes = 100
-    var subjects = 100
-    timeWrites( dbConnector, writes, subjects, ( err, time ) => {
-      console.log( `times ${writes} writes with ${subjects} subjects at ${time.toFixed( 2 )} ms` )
-      expect( err ).to.equal( null )
-      setTimeout( done, 50 )
-    })
-  })
+  // it( 'times writes for small amounts of subjects', done => {
+  //   runTests([
+  //     { writes: 100,    subjects: 10 },
+  //     { writes: 1000,   subjects: 10 },
+  //     { writes: 5000,   subjects: 10 },
+  //     { writes: 10000,  subjects: 10 },
+  //     { writes: 20000,  subjects: 10 },
+  //     { writes: 25000,  subjects: 10 },
+  //     { writes: 50000,  subjects: 10 },
+  //     { writes: 75000,  subjects: 10 },
+  //     { writes: 100000,  subjects: 10 }
+  //   ], done, dbConnector )
+  // })
 
-  it( 'writes 1000 updates across 10 subjects', ( done ) => {
-    var writes = 1000
-    var subjects = 1000
-    timeWrites( dbConnector, writes, subjects, ( err, time ) => {
-      console.log( `times ${writes} writes with ${subjects} subjects at ${time.toFixed( 2 )} ms` )
-      expect( err ).to.equal( null )
-      setTimeout( done, 50 )
-    })
-  })
 
-  it( 'writes 10000 updates across 10 subjects', ( done ) => {
-    var writes = 10000
-    var subjects = 10000
-    timeWrites( dbConnector, writes, subjects, ( err, time ) => {
-      console.log( `times ${writes} writes with ${subjects} subjects at ${time.toFixed( 2 )} ms` )
-      expect( err ).to.equal( null )
-      setTimeout( done, 50 )
-    })
-  })
+  // it( 'deletes all existing rows', done => {
+  //   dbConnector.query( 'DROP TABLE ds.perf', done )
+  // })
 
-  it( 'writes 25000 updates across 10 subjects', ( done ) => {
-    var writes = 25000
-    var subjects = 25000
-    timeWrites( dbConnector, writes, subjects, ( err, time ) => {
-      console.log( `times ${writes} writes with ${subjects} subjects at ${time.toFixed( 2 )} ms` )
-      expect( err ).to.equal( null )
-      setTimeout( done, 50 )
-    })
-  })
+  // it( 'writes 1 record to ensure table exists', ( done ) => {
+  //   timeWrites( dbConnector, 100, 10, ( err, time ) => {
+  //     expect( err ).to.equal( null )
+  //     done()
+  //   })
+  // })
 
-  it( 'writes 50000 updates across 10 subjects', ( done ) => {
-    var writes = 50000
-    var subjects = 50000
-    timeWrites( dbConnector, writes, subjects, ( err, time ) => {
-      console.log( `times ${writes} writes with ${subjects} subjects at ${time.toFixed( 2 )} ms` )
-      expect( err ).to.equal( null )
-      setTimeout( done, 50 )
-    })
-  })
+  // it( 'clocks writes for incresing amounts of subjects', done => {
+  //   runTests([
+  //     { writes: 100,    subjects: 100 },
+  //     { writes: 1000,   subjects: 1000 },
+  //     { writes: 5000,   subjects: 5000  },
+  //     { writes: 10000,  subjects: 10000 },
+  //     { writes: 20000,  subjects: 20000 },
+  //     { writes: 25000,  subjects: 25000 },
+  //     { writes: 50000,  subjects: 50000 }
+  //   ], done, dbConnector )
+  // })
 
-  it( 'writes 100000 updates across 10 subjects', ( done ) => {
-    var writes = 100000
-    var subjects = 100000
-    timeWrites( dbConnector, writes, subjects, ( err, time ) => {
-      console.log( `times ${writes} writes with ${subjects} subjects at ${time.toFixed( 2 )} ms` )
-      expect( err ).to.equal( null )
-      setTimeout( done, 50 )
-    })
-  })
+  // it( 'deletes all existing rows', done => {
+  //   dbConnector.query( 'DROP TABLE ds.perf', done )
+  // })
 
-  it( 'writes 250000 updates across 10 subjects', ( done ) => {
-    var writes = 250000
-    var subjects = 250000
-    timeWrites( dbConnector, writes, subjects, ( err, time ) => {
-      console.log( `times ${writes} writes with ${subjects} subjects at ${time.toFixed( 2 )} ms` )
-      expect( err ).to.equal( null )
-      setTimeout( done, 50 )
-    })
-  })
+  // it( 'writes 1 record to ensure table exists', ( done ) => {
+  //   timeWrites( dbConnector, 100, 10, ( err, time ) => {
+  //     expect( err ).to.equal( null )
+  //     done()
+  //   })
+  // })
 
-  it( 'writes 500000 updates across 10 subjects', ( done ) => {
-    var writes = 500000
-    var subjects = 500000
-    timeWrites( dbConnector, writes, subjects, ( err, time ) => {
-      console.log( `times ${writes} writes with ${subjects} subjects at ${time.toFixed( 2 )} ms` )
-      expect( err ).to.equal( null )
-      setTimeout( done, 50 )
-    })
+  it( 'compares inserts with updates', done => {
+    runTests([
+      { writes: 25000,  subjects: 25000 },
+      { writes: 25000,  subjects: 25000 }
+    ], done, dbConnector, 100 )
   })
+  
 
-  it( 'writes 750000 updates across 10 subjects', ( done ) => {
-    var writes = 750000
-    var subjects = 750000
-    timeWrites( dbConnector, writes, subjects, ( err, time ) => {
-      console.log( `times ${writes} writes with ${subjects} subjects at ${time.toFixed( 2 )} ms` )
-      expect( err ).to.equal( null )
-      setTimeout( done, 50 )
-    })
-  })
-
-  it( 'writes 1000000 updates across 10 subjects', ( done ) => {
-    var writes = 1000000
-    var subjects = 1000000
-    timeWrites( dbConnector, writes, subjects, ( err, time ) => {
-      console.log( `times ${writes} writes with ${subjects} subjects at ${time.toFixed( 2 )} ms` )
-      expect( err ).to.equal( null )
-      setTimeout( done, 50 )
-    })
-  })
   it( 'destroys the connector', done => {
     dbConnector.destroy( done )
   })

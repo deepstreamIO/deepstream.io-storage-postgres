@@ -13,12 +13,12 @@ const pckg = require( '../package.json' )
 // could surpress this by temporarily disabling the console...
 // unfortunately, multiple queries per statement fail using the native module
 // disabling until resolved
-const pg = /*require('pg').native ||*/ require('pg')
+const pg = require('pg').native || require('pg')
 const Statements = require( './statements' )
 const utils = require( './utils' )
 const SchemaListener = require( './schema-listener' )
 const WriteOperation = require( './write-operation' )
-
+console.log( require('pg').native );
 /**
  * Class deepstream.io postgres database connector
  *
