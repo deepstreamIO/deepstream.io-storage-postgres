@@ -1,3 +1,10 @@
+## [1.1.0] - 2017-05-30
+
+### Performance Improvements
+- Disabled notifications by default
+- Changed default column type for value to text
+- Introduced `useJsonb` option to enable storage as binary json
+
 ## [1.0.1] - 2017-02-12
 
 ### Miscellaneous
