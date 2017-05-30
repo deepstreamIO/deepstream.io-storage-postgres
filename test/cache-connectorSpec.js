@@ -12,7 +12,14 @@ const settings = {
   host: process.env.PGHOST,
   port: parseInt( process.env.PGPORT, 10 ),
   max: 10,
-  idleTimeoutMillis: 30000
+  idleTimeoutMillis: 30000,
+  notifications: {
+    CREATE_TABLE: true,
+    DESTROY_TABLE: true,
+    INSERT: true,
+    UPDATE: false,
+    DELETE: true
+  }
 }
 
 

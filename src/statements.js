@@ -54,7 +54,7 @@ module.exports = class Statements{
     CREATE TABLE "${params.schema}"."${params.table}"
     (
         id text NOT NULL,
-        val jsonb NOT NULL,
+        val ${this._options.useJsonb ? 'jsonb' : 'text'} NOT NULL,
         PRIMARY KEY (id)
     )
     WITH (

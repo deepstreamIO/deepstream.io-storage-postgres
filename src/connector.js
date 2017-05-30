@@ -221,7 +221,12 @@ module.exports = class Connector extends events.EventEmitter {
         callback( null, null )
       }
       else {
-        callback( null, result.rows[ 0 ].val )
+        if( typeof result.rows[ 0 ].val !== 'string' ) {
+          callback( null,  result.rows[ 0 ].val )
+        } else {
+          callback( null, JSON.parse( result.rows[ 0 ].val ) )
+        }
+        
       }
     }, null, true )
   }
@@ -302,12 +307,13 @@ module.exports = class Connector extends events.EventEmitter {
     this._checkOption( 'idleTimeoutMillis', 'number', 30000 )
     this._checkOption( 'writeInterval', 'number', 200 )
     this._checkOption( 'schema', 'string', 'ds' )
+    this._checkOption( 'useJsonb', 'boolean', false )
     this._checkOption( 'notifications', 'object',  {
-      CREATE_TABLE: true,
-      DESTROY_TABLE: true,
-      INSERT: true,
+      CREATE_TABLE: false,
+      DESTROY_TABLE: false,
+      INSERT: false,
       UPDATE: false,
-      DELETE: true
+      DELETE: false
     })
   }
 

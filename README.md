@@ -21,13 +21,15 @@ plugins:
       schema: ds #schema defaults to ds. Will be created if it doesn't exist
       max: 10 #concurrent connections
       idleTimeoutMillis: 30000 #timeout after which connection will be cut
-      writeInterval: 200 #amout of milliseconds during which writes will be buffered
+      writeInterval: 200 #amout of milliseconds during which writes will be 
+      useJsonb: false #store values as searchable binary JSON (slower)
+      buffered
       notifications:
-        CREATE_TABLE: true #Get notified when tables are created
-        DESTROY_TABLE: true #Get notified when tables are dropped
-        INSERT: true # Get notified when records are created
+        CREATE_TABLE: false #Get notified when tables are created
+        DESTROY_TABLE: false #Get notified when tables are dropped
+        INSERT: false # Get notified when records are created
         UPDATE: false # Get notified when records are updated
-        DELETE: true # Get notified when records are deleted
+        DELETE: false # Get notified when records are deleted
 ```
 
 This connector can also be used as a standalone component from node.js to connect to postgres' notification mechanism. To do this, install the connector via
