@@ -111,7 +111,7 @@ module.exports = class Statements{
     var valueStrings = [], key
 
     for( key in writeBuffer ) {
-      valueStrings.push(`('${key}','${JSON.stringify( writeBuffer[ key ] )}')`)
+      valueStrings.push(`('${key}','${JSON.stringify( writeBuffer[ key ] ).replace(/'/g, "''")}')`)
     }
 
     return `
