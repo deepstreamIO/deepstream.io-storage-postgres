@@ -1,3 +1,8 @@
+## [1.1.1] - 2017-08-09
+
+### Fixes
+- Escape single quotes in values of query
+
 ## [1.1.0] - 2017-05-30
 
 ### Performance Improvements
