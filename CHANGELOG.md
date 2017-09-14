@@ -1,3 +1,9 @@
+## [1.1.3] - 2017-09-30
+
+### Miscellaneous
+
+- Various fixes to build scripts to allow releases properly.
+
 ## [1.1.1] - 2017-08-09
 
 ### Fixes
