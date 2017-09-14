@@ -19,7 +19,7 @@ init:
   - set PATH=%PATH%;C:\Program Files\PostgreSQL\9.5\bin
 
 install:
-  - ps: Install-Product node 6.9.5
+  - ps: Install-Product node 6.11
   - npm install
 
 test_script:
