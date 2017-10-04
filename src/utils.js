@@ -26,7 +26,12 @@ exports.parseKey = function( key, options ) {
       : 'default'
     params.key = key.replace( KEY_REGEXP, '' )
   } else {
-    params.table = key.substring( 0, splitCharIndex ).replace( KEY_REGEXP, '' )
+    var tableName = key.substring( 0, splitCharIndex )
+    if (options.table && options.table.prefix) {
+      tableName = options.table.prefix + tableName
+    }
+
+    params.table = tableName.replace( KEY_REGEXP, '' )
     params.key = key.substr( splitCharIndex + 1 ).replace( KEY_REGEXP, '' )
   }
 
