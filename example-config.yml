@@ -8,6 +8,9 @@ plugins:
       host: localhost
       port: 5432
       schema: ds
+      table:
+        defaultName: default
+        prefix: ds
       max: 10
       idleTimeoutMillis: 30000
       writeInterval: 200
