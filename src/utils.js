@@ -15,14 +15,15 @@ const KEY_REGEXP = /[\"\;]/g
  * @returns {Object} parsedKey { schema: <String>, table: <String>, key: <String> }
  */
 exports.parseKey = function( key, options ) {
-
   var params = {}
   var splitCharIndex = key.indexOf( '/' )
 
   params.schema = options.schema
 
   if( splitCharIndex === -1 ) {
-    params.table = 'default'
+    params.table = options.table && options.table.defaultName
+      ?  options.table.defaultName
+      : 'default'
     params.key = key.replace( KEY_REGEXP, '' )
   } else {
     params.table = key.substring( 0, splitCharIndex ).replace( KEY_REGEXP, '' )
