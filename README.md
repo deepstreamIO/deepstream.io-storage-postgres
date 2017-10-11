@@ -19,9 +19,12 @@ plugins:
       host: localhost
       port: 5432 #postgres default post
       schema: ds #schema defaults to ds. Will be created if it doesn't exist
+      table:
+        defaultName: default # default table name defaults to default
+        prefix: ds_ # table prefix defaults to empty string, so no prefix
       max: 10 #concurrent connections
       idleTimeoutMillis: 30000 #timeout after which connection will be cut
-      writeInterval: 200 #amout of milliseconds during which writes will be 
+      writeInterval: 200 #amout of milliseconds during which writes will be
       useJsonb: false #store values as searchable binary JSON (slower)
       buffered
       notifications:

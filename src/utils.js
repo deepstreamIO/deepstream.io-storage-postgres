@@ -15,17 +15,23 @@ const KEY_REGEXP = /[\"\;]/g
  * @returns {Object} parsedKey { schema: <String>, table: <String>, key: <String> }
  */
 exports.parseKey = function( key, options ) {
-
   var params = {}
   var splitCharIndex = key.indexOf( '/' )
 
   params.schema = options.schema
 
   if( splitCharIndex === -1 ) {
-    params.table = 'default'
+    params.table = options.table && options.table.defaultName
+      ?  options.table.defaultName
+      : 'default'
     params.key = key.replace( KEY_REGEXP, '' )
   } else {
-    params.table = key.substring( 0, splitCharIndex ).replace( KEY_REGEXP, '' )
+    var tableName = key.substring( 0, splitCharIndex )
+    if (options.table && options.table.prefix) {
+      tableName = options.table.prefix + tableName
+    }
+
+    params.table = tableName.replace( KEY_REGEXP, '' )
     params.key = key.substr( splitCharIndex + 1 ).replace( KEY_REGEXP, '' )
   }
 
