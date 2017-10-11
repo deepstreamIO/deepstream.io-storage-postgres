@@ -39,6 +39,33 @@ exports.parseKey = function( key, options ) {
 }
 
 /**
+ * Parses a postgres version string and returns it as an array, e.g.
+ * 
+ * PostgreSQL 9.5.4 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 4.8.2 20140120 (Red Hat 4.8.2-16), 64-bit
+ * 
+ * extracts the version number : 9.5.4 and returns [9, 5, 4]
+ * 
+ * @param   {String} versionString postgres version string
+ * 
+ * @private
+ * @returns {void}
+ */
+function _parsePgVersion( versionString ) {
+  return versionString
+    .match(/PostgreSQL (\d+\.*)?(\d+\.*)?(\*|\d+)/)
+    .splice(1)
+    .filter(x => typeof x !== 'undefined')
+    .map(v => parseInt(v, 10));
+}
+
+/**
+ * Export only for test cases
+ */
+if (process.env.NODE_ENV === 'test') {
+  exports._parsePgVersion = _parsePgVersion;
+}
+
+/**
  * Parses a postgres version string, e.g.
  *
  * PostgreSQL 9.5.4 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 4.8.2 20140120 (Red Hat 4.8.2-16), 64-bit
@@ -52,12 +79,9 @@ exports.parseKey = function( key, options ) {
  * @returns {void}
  */
 exports.checkVersion = function( versionString ) {
-  var v = versionString
-    .match(/PostgreSQL (\d*)\.(\d*)\.(\d*)/)
-    .splice( 1 )
-    .map(v => parseInt( v, 10 ))
+  var v = _parsePgVersion(versionString); 
 
   if( v[ 0 ] < 9 || v[ 0 ] === 9 && v[ 1 ] < 5 ) {
-    throw new Error( 'postgres version is ' + v.join('.') + 'but minimum version is 9.5')
+    throw new Error( 'postgres version is ' + v.join('.') + ' but minimum version is 9.5')
   }
 }
