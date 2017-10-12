@@ -26,7 +26,7 @@ test_script:
   - createdb appveyor_ci_test
   - node --version
   - npm --version
-  - npm test
+  - set NODE_ENV=test npm test
   - curl -o package.sh -L https://raw.githubusercontent.com/deepstreamIO/deepstream.io-connector-publishingtest/master/scripts/package.sh
   - bash package.sh
   - For /d %%d in ( build\** ) do MOVE %%d %cd%
