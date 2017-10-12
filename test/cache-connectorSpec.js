@@ -22,7 +22,6 @@ const settings = {
   }
 }
 
-
 describe( 'the message connector has the correct structure', () => {
   var dbConnector
 
@@ -200,10 +199,34 @@ describe( 'sets and gets values', () => {
   })
 })
 
-
 describe( 'advanced sets', () => {
   var dbConnector, lastMessage = null, messages = []
   const ITEM_NAME = 'some-other-table/some-other-key'
+
+  /**
+   * A promisified version of dbConnector#set.
+   * 
+   * Written mainly for testcases that call dbConnector#set successively,
+   * Written as to avoid potential race conditions.
+   * 
+   * #used in:
+   * writes multiple values in quick succession to an existing table 
+   * writes multiple values in quick succession to a new table 
+   * writes a combination of values in quick succession
+   * 
+   * @param {String} path 
+   * @param {Object} Value Object 
+   * @return {Promise} Resolves an object {_done: true, _error: null}, Rejects with an error
+   */
+  let set = (dbConnector, path, {val}) => new Promise((fulfill, reject) => {
+    dbConnector.set(path, {val}, (err) => {
+      if (err) reject(err)
+      fulfill({
+        _done: true,
+        _error: err 
+      })
+    })
+  })
 
   it( 'creates the dbConnector', ( done ) => {
     dbConnector = new DbConnector( settings )
@@ -261,14 +284,18 @@ describe( 'advanced sets', () => {
   })
 
   it( 'writes multiple values in quick succession to an existing table', ( done ) => {
-    dbConnector.set( 'some-table/itemA', { val: 1 }, () => {})
-    dbConnector.set( 'some-table/itemA', { val: 2 }, () => {})
-    dbConnector.set( 'some-table/itemA', { val: 3 }, () => {})
-    dbConnector.set( 'some-table/itemA', { val: 4 }, () => {})
-    dbConnector.set( 'some-table/itemA', { val: 5 }, ( error ) => {
-      expect( error ).to.be.null
-      done()
-    })
+    let dbConnSet = set.bind(null, dbConnector);
+
+    dbConnSet( 'some-table/itemA', { val: 1 })
+      .then( dbConnSet.bind(null, 'some-table/itemA', { val: 2 }) )
+      .then( dbConnSet.bind(null, 'some-table/itemA', { val: 3 }) )
+      .then( dbConnSet.bind(null, 'some-table/itemA', { val: 4 }) )
+      .then( dbConnSet.bind(null, 'some-table/itemA', { val: 5 }) )
+      .then(({_done, _error}) => {
+        expect(_done).to.be.true
+        expect(_error).to.be.null
+        done()
+      })
   })
 
   it( 'retrieves the latest item from the last operation', ( done ) => {
@@ -289,14 +316,18 @@ describe( 'advanced sets', () => {
 
 
   it( 'writes multiple values in quick succession to a new table', ( done ) => {
-    dbConnector.set( 'new-table/itemA', { val: 6 }, () => {})
-    dbConnector.set( 'new-table/itemA', { val: 7 }, () => {})
-    dbConnector.set( 'new-table/itemA', { val: 8 }, () => {})
-    dbConnector.set( 'new-table/itemA', { val: 9 }, () => {})
-    dbConnector.set( 'new-table/itemA', { val: 10 }, ( error ) => {
-      expect( error ).to.be.null
-      done()
-    })
+    let dbConnSet = set.bind(null, dbConnector);
+
+    dbConnSet( 'new-table/itemA', { val: 6 })
+      .then( dbConnSet.bind(null, 'new-table/itemA', { val: 7 }) )
+      .then( dbConnSet.bind(null, 'new-table/itemA', { val: 8 }) )
+      .then( dbConnSet.bind(null, 'new-table/itemA', { val: 9 }) )
+      .then( dbConnSet.bind(null, 'new-table/itemA', { val: 10 }) )
+      .then(({_done, _error}) => {
+        expect(_done).to.be.true
+        expect(_error).to.be.null
+        done()
+      })
   })
 
   it( 'retrieves the latest item from the last operation', ( done ) => {
@@ -315,13 +346,17 @@ describe( 'advanced sets', () => {
   })
 
   it( 'writes a combination of values in quick succession', ( done ) => {
-    dbConnector.set( 'table-a/item-a', { val: 'aa' }, () => {})
-    dbConnector.set( 'table-a/item-b', { val: 'ab' }, () => {})
-    dbConnector.set( 'table-b/item-a', { val: 'ba' }, () => {})
-    dbConnector.set( 'table-b/item-b', { val: 'bb' }, ( error ) => {
-      expect( error ).to.be.null
-      done()
-    })
+    let dbConnSet = set.bind(null, dbConnector);
+    
+    dbConnSet('table-a/item-a', { val: 'aa' })
+      .then( dbConnSet.bind(null, 'table-a/item-b', { val: 'ab' }) )
+      .then( dbConnSet.bind(null, 'table-b/item-a', { val: 'ba' }) )
+      .then( dbConnSet.bind(null, 'table-b/item-b', { val: 'bb' }) )
+      .then(({_done, _error}) => {
+        expect(_done).to.be.true
+        expect(_error).to.be.null
+        done()
+      })
   })
 
   it( 'retrieves item aa', ( done ) => {
