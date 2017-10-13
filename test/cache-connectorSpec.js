@@ -315,44 +315,51 @@ describe( 'advanced sets', () => {
   })
 
   it( 'writes a combination of values in quick succession', ( done ) => {
-    dbConnector.set( 'table-a/item-a', { val: 'aa' }, () => {})
-    dbConnector.set( 'table-a/item-b', { val: 'ab' }, () => {})
-    dbConnector.set( 'table-b/item-a', { val: 'ba' }, () => {})
+    let doneListener = new EventEmitter();
+
+    let setgets = [ 'aa', 'ab', 'ba', 'bb' ];
+
+    doneListener.on('set-get-done', val => {
+      setgets.splice(setgets.indexOf(val), 1);
+      if (!setgets.length) {
+        done();
+      }
+    })
+
+    dbConnector.set( 'table-a/item-a', { val: 'aa' }, (error) => {
+      expect( error ).to.be.null;
+      dbConnector.get( 'table-a/item-a', ( error, item ) => {
+        expect( error ).to.be.null
+        expect( item.val ).to.equal( 'aa' )
+        doneListener.emit('set-get-done', 'aa')
+      })
+    })
+
+    dbConnector.set( 'table-a/item-b', { val: 'ab' }, (error) => {
+      expect( error ).to.be.null;
+      dbConnector.get( 'table-a/item-b', ( error, item ) => {
+        expect( error ).to.be.null
+        expect( item.val ).to.equal( 'ab' )
+        doneListener.emit('set-get-done', 'ab')
+      })
+    })
+
+    dbConnector.set( 'table-b/item-a', { val: 'ba' }, (error) => {
+      expect( error ).to.be.null;
+      dbConnector.get( 'table-b/item-a', ( error, item ) => {
+        expect( error ).to.be.null
+        expect( item.val ).to.equal( 'ba' )
+        doneListener.emit('set-get-done', 'ba')
+      })
+    })
+
     dbConnector.set( 'table-b/item-b', { val: 'bb' }, ( error ) => {
-      expect( error ).to.be.null
-      done()
-    })
-  })
-
-  it( 'retrieves item aa', ( done ) => {
-    dbConnector.get( 'table-a/item-a', ( error, item ) => {
-      expect( error ).to.be.null
-      expect( item.val ).to.equal( 'aa' )
-      done()
-    })
-  })
-
-  it( 'retrieves item ab', ( done ) => {
-    dbConnector.get( 'table-a/item-b', ( error, item ) => {
-      expect( error ).to.be.null
-      expect( item.val ).to.equal( 'ab' )
-      done()
-    })
-  })
-
-  it( 'retrieves item ba', ( done ) => {
-    dbConnector.get( 'table-b/item-a', ( error, item ) => {
-      expect( error ).to.be.null
-      expect( item.val ).to.equal( 'ba' )
-      done()
-    })
-  })
-
-  it( 'retrieves item bb', ( done ) => {
-    dbConnector.get(  'table-b/item-b', ( error, item ) => {
-      expect( error ).to.be.null
-      expect( item.val ).to.equal( 'bb' )
-      setTimeout( done, 600 )
+      expect( error ).to.be.null;
+      dbConnector.get(  'table-b/item-b', ( error, item ) => {
+        expect( error ).to.be.null
+        expect( item.val ).to.equal( 'bb' )
+        doneListener.emit('set-get-done', 'bb')
+      })
     })
   })
 
