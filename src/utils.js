@@ -50,7 +50,7 @@ exports.parseKey = function( key, options ) {
  * @private
  * @returns {void}
  */
-function _parsePgVersion( versionString ) {
+let parsePgVersion = function( versionString ) {
   return versionString
     .match(/PostgreSQL (\d+\.*)?(\d+\.*)?(\*|\d+)/)
     .splice(1)
@@ -58,12 +58,7 @@ function _parsePgVersion( versionString ) {
     .map(v => parseInt(v, 10));
 }
 
-/**
- * Export only for test cases
- */
-if (process.env.NODE_ENV === 'test') {
-  exports._parsePgVersion = _parsePgVersion;
-}
+exports.parsePgVersion = parsePgVersion;
 
 /**
  * Parses a postgres version string, e.g.
@@ -79,7 +74,7 @@ if (process.env.NODE_ENV === 'test') {
  * @returns {void}
  */
 exports.checkVersion = function( versionString ) {
-  var v = _parsePgVersion(versionString); 
+  var v = parsePgVersion(versionString); 
 
   if( v[ 0 ] < 9 || v[ 0 ] === 9 && v[ 1 ] < 5 ) {
     throw new Error( 'postgres version is ' + v.join('.') + ' but minimum version is 9.5')

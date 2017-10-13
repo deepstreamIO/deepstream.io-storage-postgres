@@ -39,7 +39,7 @@ node_js:
 
 script:
   - createdb travis_ci_test
-  - NODE_ENV=test npm run test
+  - npm run test
   - curl -o package.sh -L https://raw.githubusercontent.com/deepstreamIO/deepstream.io-connector-publishingtest/master/scripts/package.sh
   - bash package.sh
 
