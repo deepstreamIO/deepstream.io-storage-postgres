@@ -65,4 +65,22 @@ describe( 'various utils work', () => {
     })
   })
 
+  describe( 'checks version' , () => {
+    it( 'should parse all 9.5+ versions' , () => {
+      let pgnine = "PostgreSQL 9.5.9 on x86_64-pc-linux-gnu, compiled by gcc (Debian 4.9.2-10) 4.9.2, 64-bit";
+      let pgten = "PostgreSQL 10.0 on x86_64-pc-linux-gnu, compiled by gcc (Debian 4.9.2-10) 4.9.2, 64-bit";
+      let pgtenone = "PostgreSQL 10.0.1 on x86_64-pc-linux-gnu, compiled by gcc (Debian 4.9.2-10) 4.9.2, 64-bit";
+      expect( utils.parsePgVersion(pgnine) ) .to.deep.equal([9, 5, 9]);
+      expect( utils.parsePgVersion(pgten) ) .to.deep.equal([10, 0]);
+      expect( utils.parsePgVersion(pgtenone) ) .to.deep.equal([10, 0, 1]);
+    })
+
+    it( 'should throw if version is 9.5-' , () => {
+      let pgnine = "PostgreSQL 9.4.1 on x86_64-pc-linux-gnu, compiled by gcc (Debian 4.9.2-10) 4.9.2, 64-bit";
+      expect( () => {
+        utils.checkVersion(pgnine);
+      } ) .to.throw(Error, 'postgres version is 9.4.1 but minimum version is 9.5');
+    })
+
+  })
 })
