@@ -22,7 +22,11 @@ module.exports = class Write{
    */
   constructor( params, writeBuffer, callbacks, dbConnector ) {
     this._params = params
-    this._params.owner = dbConnector.options.user
+    if (dbConnector.options.role) {
+      this._params.owner = dbConnector.options.role
+    } else {
+      this._params.owner = dbConnector.options.user
+    }
     this._writeBuffer = writeBuffer
     this._callbacks = callbacks
     this._dbConnector = dbConnector
