@@ -1,3 +1,8 @@
+## [1.1.5] - 2019-04-07
+
+### Fix
+    - Correctly extract version with postgres version 10 and 11
+
 ## [1.1.4] - 2017-10-12
 
 ### Added
