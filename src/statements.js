@@ -60,10 +60,14 @@ module.exports = class Statements{
     WITH (
         OIDS = FALSE
     )
-    TABLESPACE pg_default;
+    TABLESPACE pg_default;`
 
+    if (params.owner) {
+      statement += `
     ALTER TABLE "${params.schema}"."${params.table}"
-    OWNER to "${params.owner}";`
+    OWNER to "${params.owner}";
+    `
+    }
 
     if( updateOn.length > 0 ) {
       statement += `

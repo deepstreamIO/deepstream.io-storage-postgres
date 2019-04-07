@@ -20,7 +20,7 @@ services:
   - postgresql
 
 addons:
-  postgresql: "9.5"
+  postgresql: "11"
   apt:
     sources:
     - ubuntu-toolchain-r-test
@@ -28,8 +28,7 @@ addons:
     - g++-4.8
 
 node_js:
-  - "stable"
-  - "6.11"
+  - "10"
 
 # matrix:
 #   include:

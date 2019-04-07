@@ -364,7 +364,7 @@ module.exports = class Connector extends events.EventEmitter {
           throw error
         }
       }
-      utils.checkVersion( result.rows[ 0 ].version )
+      utils.checkVersion(result[result.length - 1].rows[0].version)
       this.isReady = true
       this.emit( 'ready' )
     }, null, true )
