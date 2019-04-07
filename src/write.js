@@ -1,13 +1,13 @@
-'use strict'
+"use strict";
 
-const UNDEFINED_TABLE = '42P01'
+const UNDEFINED_TABLE = "42P01";
 
 /**
  * A single write operation to the database. Should the table
  * the write is destined for not exist this class will create
  * it and retry the operation
  */
-module.exports = class Write{
+module.exports = class Write {
 
   /**
    * Creates the class and immediatly invokes the first
@@ -21,16 +21,16 @@ module.exports = class Write{
    * @constructor
    */
   constructor( params, writeBuffer, callbacks, dbConnector ) {
-    this._params = params
+    this._params = params;
     if (dbConnector.options.role) {
-      this._params.owner = dbConnector.options.role
+      this._params.owner = dbConnector.options.role;
     } else {
-      this._params.owner = dbConnector.options.user
+      this._params.owner = dbConnector.options.user;
     }
-    this._writeBuffer = writeBuffer
-    this._callbacks = callbacks
-    this._dbConnector = dbConnector
-    this._write()
+    this._writeBuffer = writeBuffer;
+    this._callbacks = callbacks;
+    this._dbConnector = dbConnector;
+    this._write();
   }
 
   /**
@@ -41,8 +41,8 @@ module.exports = class Write{
    * @returns {void}
    */
   _write() {
-    const statement = this._dbConnector.statements.set( this._params, this._writeBuffer )
-    this._dbConnector.query( statement, this._onWriteResult.bind( this ), null, true )
+    const statement = this._dbConnector.statements.set( this._params, this._writeBuffer );
+    this._dbConnector.query( statement, this._onWriteResult.bind( this ), null, true );
   }
 
   /**
@@ -55,12 +55,12 @@ module.exports = class Write{
    * @returns {void}
    */
   _onWriteResult( error, result ) {
-    if( error && error.code === UNDEFINED_TABLE ) {
-      this._createTable()
-    } else if( error ) {
-      this._end( error )
+    if ( error && error.code === UNDEFINED_TABLE ) {
+      this._createTable();
+    } else if ( error ) {
+      this._end( error );
     } else {
-      this._end( null )
+      this._end( null );
     }
   }
 
@@ -72,12 +72,12 @@ module.exports = class Write{
    */
   _createTable() {
     this._dbConnector.query( this._dbConnector.statements.createTable( this._params ), ( error, result ) => {
-      if( error ) {
-        this._end( error )
+      if ( error ) {
+        this._end( error );
       } else {
-        this._write()
+        this._write();
       }
-    })
+    });
   }
 
   /**
@@ -89,12 +89,12 @@ module.exports = class Write{
    * @returns {void}
    */
   _end( error ) {
-    for( var i = 0; i < this._callbacks.length; i++ ) {
-      this._callbacks[ i ]( error )
+    for ( var i = 0; i < this._callbacks.length; i++ ) {
+      this._callbacks[ i ]( error );
     }
-    this._params = null
-    this._writeBuffer = null
-    this._callbacks = null
-    this._dbConnector = null
+    this._params = null;
+    this._writeBuffer = null;
+    this._callbacks = null;
+    this._dbConnector = null;
   }
-}
+};

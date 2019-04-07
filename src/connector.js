@@ -1,23 +1,23 @@
-'use strict'
+"use strict";
 
-const UNDEFINED_TABLE = '42P01'
-const INTERNAL_ERROR = 'XX000'
-const DATABASE_IS_STARTING_UP = '57P03'
-const CONNECTION_REFUSED = 'ECONNREFUSED'
-const events = require( 'events' )
-const util = require( 'util' )
-const pckg = require( '../package.json' )
+const UNDEFINED_TABLE = "42P01";
+const INTERNAL_ERROR = "XX000";
+const DATABASE_IS_STARTING_UP = "57P03";
+const CONNECTION_REFUSED = "ECONNREFUSED";
+const events = require( "events" );
+const util = require( "util" );
+const pckg = require( "../package.json" );
 
 // native has a getter specified that will lazily load the module
 // if the native module is not available it will log "Cannot find module 'pg-native'"
 // could surpress this by temporarily disabling the console...
 // unfortunately, multiple queries per statement fail using the native module
 // disabling until resolved
-const pg = /*require('pg').native ||*/ require('pg')
-const Statements = require( './statements' )
-const utils = require( './utils' )
-const SchemaListener = require( './schema-listener' )
-const WriteOperation = require( './write-operation' )
+const pg = /*require('pg').native ||*/ require("pg");
+const Statements = require( "./statements" );
+const utils = require( "./utils" );
+const SchemaListener = require( "./schema-listener" );
+const WriteOperation = require( "./write-operation" );
 
 /**
  * Class deepstream.io postgres database connector
@@ -57,21 +57,21 @@ module.exports = class Connector extends events.EventEmitter {
    * @returns {void}
    */
   constructor( options ) {
-    super()
-    this.isReady = false
-    this.name = pckg.name
-    this.version = pckg.version
-    this._structure = {}
-    this.options = options
-    this._checkOptions()
-    this.statements = new Statements( this.options )
-    this._connectionPool = new pg.Pool( this.options )
-    this._connectionPool.on( 'error', this._checkError.bind( this ) )
-    this._schemaListener = new SchemaListener( this._connectionPool )
-    this._writeOperations = {}
-    this._initialise()
-    this._flushInterval = setInterval( this._flushWrites.bind( this ), this.options.writeInterval )
-    this.type = `postgres connection to ${this.options.host} and database ${this.options.database}`
+    super();
+    this.isReady = false;
+    this.name = pckg.name;
+    this.version = pckg.version;
+    this._structure = {};
+    this.options = options;
+    this._checkOptions();
+    this.statements = new Statements( this.options );
+    this._connectionPool = new pg.Pool( this.options );
+    this._connectionPool.on( "error", this._checkError.bind( this ) );
+    this._schemaListener = new SchemaListener( this._connectionPool );
+    this._writeOperations = {};
+    this._initialise();
+    this._flushInterval = setInterval( this._flushWrites.bind( this ), this.options.writeInterval );
+    this.type = `postgres connection to ${this.options.host} and database ${this.options.database}`;
   }
 
   /**
@@ -84,9 +84,9 @@ module.exports = class Connector extends events.EventEmitter {
    * @returns {void}
    */
   destroy( callback ) {
-    clearInterval( this._flushInterval )
-    this._schemaListener.destroy()
-    this._connectionPool.end( callback )
+    clearInterval( this._flushInterval );
+    this._schemaListener.destroy();
+    this._connectionPool.end( callback );
   }
 
   /**
@@ -99,8 +99,8 @@ module.exports = class Connector extends events.EventEmitter {
    * @returns {void}
    */
   createSchema( name, callback ) {
-    var statement = this.statements.createSchema({ name: name, owner: this.options.user })
-    this.query( statement, callback, null, true )
+    var statement = this.statements.createSchema({ name: name, owner: this.options.user });
+    this.query( statement, callback, null, true );
   }
 
   /**
@@ -113,8 +113,8 @@ module.exports = class Connector extends events.EventEmitter {
    * @returns {void}
    */
   destroySchema( name, callback ) {
-    var statement = this.statements.destroySchema({ name: name })
-    this.query( statement, callback, null, true )
+    var statement = this.statements.destroySchema({ name: name });
+    this.query( statement, callback, null, true );
   }
 
   /**
@@ -128,19 +128,19 @@ module.exports = class Connector extends events.EventEmitter {
    * @returns {void}
    */
   getSchemaOverview( callback, name ) {
-    name = name || this.options.schema
-    var statement = this.statements.getOverview({ schema: name })
+    name = name || this.options.schema;
+    var statement = this.statements.getOverview({ schema: name });
     this.query( statement, (error, result ) => {
-      if( error ) {
-        callback( error )
+      if ( error ) {
+        callback( error );
       } else {
-        var tables = {},i
-        for( i = 0; i < result.rows.length; i++ ) {
-          tables[ result.rows[ i ].table ] = result.rows[ i ].entries
+        var tables = {}, i;
+        for ( i = 0; i < result.rows.length; i++ ) {
+          tables[ result.rows[ i ].table ] = result.rows[ i ].entries;
         }
-        callback( null, tables )
+        callback( null, tables );
       }
-    }, null, true )
+    }, null, true );
   }
 
   /**
@@ -157,8 +157,8 @@ module.exports = class Connector extends events.EventEmitter {
    * @returns {void}
    */
   subscribe( callback, done, schema ) {
-    schema = schema || this.options.schema
-    this._schemaListener.getNotificationsForSchema( schema, callback, done )
+    schema = schema || this.options.schema;
+    this._schemaListener.getNotificationsForSchema( schema, callback, done );
   }
 
   /**
@@ -173,8 +173,8 @@ module.exports = class Connector extends events.EventEmitter {
    * @returns {void}
    */
   unsubscribe( callback, done, schema ) {
-    schema = schema || this.options.schema
-    this._schemaListener.unsubscribeFromNotificationsForSchema( schema, callback, done )
+    schema = schema || this.options.schema;
+    this._schemaListener.unsubscribeFromNotificationsForSchema( schema, callback, done );
   }
 
   /**
@@ -189,14 +189,14 @@ module.exports = class Connector extends events.EventEmitter {
   * @returns {void}
   */
   set( key, value, callback ) {
-    const params = utils.parseKey( key, this.options )
-    const tableName = params.schema + params.table
+    const params = utils.parseKey( key, this.options );
+    const tableName = params.schema + params.table;
 
-    if( !this._writeOperations[ tableName ] ) {
-      this._writeOperations[ tableName ] = new WriteOperation( params, this )
+    if ( !this._writeOperations[ tableName ] ) {
+      this._writeOperations[ tableName ] = new WriteOperation( params, this );
     }
 
-    this._writeOperations[ tableName ].add( params.key, value, callback )
+    this._writeOperations[ tableName ].add( params.key, value, callback );
   }
 
   /**
@@ -211,24 +211,21 @@ module.exports = class Connector extends events.EventEmitter {
   */
   get( key, callback ) {
     this.query( this.statements.get( utils.parseKey( key, this.options ) ), ( error, result ) => {
-      if( error && error.code === UNDEFINED_TABLE ) {
-        callback( null, null )
-      }
-      else if( error ) {
-        callback( error )
-      }
-      else if( result.rows.length === 0 ) {
-        callback( null, null )
-      }
-      else {
-        if( typeof result.rows[ 0 ].val !== 'string' ) {
-          callback( null,  result.rows[ 0 ].val )
+      if ( error && error.code === UNDEFINED_TABLE ) {
+        callback( null, null );
+      } else if ( error ) {
+        callback( error );
+      } else if ( result.rows.length === 0 ) {
+        callback( null, null );
+      } else {
+        if ( typeof result.rows[ 0 ].val !== "string" ) {
+          callback( null,  result.rows[ 0 ].val );
         } else {
-          callback( null, JSON.parse( result.rows[ 0 ].val ) )
+          callback( null, JSON.parse( result.rows[ 0 ].val ) );
         }
-        
+
       }
-    }, null, true )
+    }, null, true );
   }
 
   /**
@@ -243,8 +240,8 @@ module.exports = class Connector extends events.EventEmitter {
   * @returns {void}
   */
   delete( key, callback ) {
-    var statement = this.statements.delete( utils.parseKey( key, this.options ) )
-    this.query( statement, callback )
+    var statement = this.statements.delete( utils.parseKey( key, this.options ) );
+    this.query( statement, callback );
   }
 
   /**
@@ -260,16 +257,16 @@ module.exports = class Connector extends events.EventEmitter {
    */
   query( query, callback, args, silent ) {
     this._connectionPool.connect( ( error, client, done ) => {
-      this._checkError( error, 'failed to get connection from the pool' )
-      if ( error ) return callback( error )
+      this._checkError( error, "failed to get connection from the pool" );
+      if ( error ) { return callback( error ); }
       client.query( query, args || [], ( error, result ) => {
-        done()
-        if( !silent ) {
-          this._checkError( error, 'error during query ' +  query )
+        done();
+        if ( !silent ) {
+          this._checkError( error, "error during query " +  query );
         }
-        callback( error, result )
-      })
-    })
+        callback( error, result );
+      });
+    });
   }
 
   /**
@@ -281,11 +278,11 @@ module.exports = class Connector extends events.EventEmitter {
    * @returns {void}
    */
   _flushWrites() {
-    for( var tableName in this._writeOperations ) {
-      if( this._writeOperations[ tableName ].isEmpty ) {
-        delete this._writeOperations[ tableName ]
+    for ( var tableName in this._writeOperations ) {
+      if ( this._writeOperations[ tableName ].isEmpty ) {
+        delete this._writeOperations[ tableName ];
       } else {
-        this._writeOperations[ tableName ].execute()
+        this._writeOperations[ tableName ].execute();
       }
     }
   }
@@ -299,22 +296,22 @@ module.exports = class Connector extends events.EventEmitter {
    * @returns {void}
    */
   _checkOptions( options ) {
-    this._checkOption( 'user', 'string' )
+    this._checkOption( "user", "string" );
     //this._checkOption( 'password', 'string' )
-    this._checkOption( 'host', 'string' )
-    this._checkOption( 'port', 'number', 5432 )
-    this._checkOption( 'max', 'number', 10 )
-    this._checkOption( 'idleTimeoutMillis', 'number', 30000 )
-    this._checkOption( 'writeInterval', 'number', 200 )
-    this._checkOption( 'schema', 'string', 'ds' )
-    this._checkOption( 'useJsonb', 'boolean', false )
-    this._checkOption( 'notifications', 'object',  {
+    this._checkOption( "host", "string" );
+    this._checkOption( "port", "number", 5432 );
+    this._checkOption( "max", "number", 10 );
+    this._checkOption( "idleTimeoutMillis", "number", 30000 );
+    this._checkOption( "writeInterval", "number", 200 );
+    this._checkOption( "schema", "string", "ds" );
+    this._checkOption( "useJsonb", "boolean", false );
+    this._checkOption( "notifications", "object",  {
       CREATE_TABLE: false,
       DESTROY_TABLE: false,
       INSERT: false,
       UPDATE: false,
-      DELETE: false
-    })
+      DELETE: false,
+    });
   }
 
   /**
@@ -330,12 +327,12 @@ module.exports = class Connector extends events.EventEmitter {
    * @returns {void}
    */
   _checkOption( name, type, defaultValue ) {
-    if( this.options[ name ] === undefined && defaultValue !== undefined ) {
-      this.options[ name ] = defaultValue
+    if ( this.options[ name ] === undefined && defaultValue !== undefined ) {
+      this.options[ name ] = defaultValue;
     }
 
-    if( typeof this.options[ name ] !== type ) {
-      throw new Error( 'missing option ' + name )
+    if ( typeof this.options[ name ] !== type ) {
+      throw new Error( "missing option " + name );
     }
   }
 
@@ -353,21 +350,21 @@ module.exports = class Connector extends events.EventEmitter {
    */
   _initialise() {
     this.query( this.statements.initDb( this.options.schema ), ( error, result ) => {
-      if( error ) {
+      if ( error ) {
         // retry for errors caused by concurrent initialisation
         // or when the DB can't be reached (e.g. it's still starting up in a Docker setup)
-        if( error.code === INTERNAL_ERROR ||
+        if ( error.code === INTERNAL_ERROR ||
             error.code === DATABASE_IS_STARTING_UP ||
             error.code === CONNECTION_REFUSED ) {
-          return this._initialise()
+          return this._initialise();
         } else {
-          throw error
+          throw error;
         }
       }
-      utils.checkVersion(result[result.length - 1].rows[0].version)
-      this.isReady = true
-      this.emit( 'ready' )
-    }, null, true )
+      utils.checkVersion(result[result.length - 1].rows[0].version);
+      this.isReady = true;
+      this.emit( "ready" );
+    }, null, true );
   }
 
   /**
@@ -381,8 +378,8 @@ module.exports = class Connector extends events.EventEmitter {
    * @returns {void}
    */
   _checkError( error, message ) {
-    if( error && error.code !== DATABASE_IS_STARTING_UP && error.code !== CONNECTION_REFUSED ) {
-      console.log( error, message )
+    if ( error && error.code !== DATABASE_IS_STARTING_UP && error.code !== CONNECTION_REFUSED ) {
+      console.log( error, message );
     }
   }
-}
+};

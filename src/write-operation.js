@@ -1,13 +1,13 @@
-'use strict'
+"use strict";
 
-const Write = require( './write' )
+const Write = require( "./write" );
 
 /**
  * This class represents an individual, buffered
  * batch write operation. Key-Value pairs can be added
  * until execute is called and the function is run.
  */
-module.exports = class WriteOperation{
+module.exports = class WriteOperation {
 
   /**
    * Creates the write operation, but doesn't
@@ -20,12 +20,12 @@ module.exports = class WriteOperation{
    * @returns {void}
    */
   constructor( params, dbConnector ) {
-    this._params = params
-    this._dbConnector = dbConnector
-    this._writeBuffer = {}
-    this._timeOut = null
-    this._callbacks = []
-    this.isEmpty = true
+    this._params = params;
+    this._dbConnector = dbConnector;
+    this._writeBuffer = {};
+    this._timeOut = null;
+    this._callbacks = [];
+    this.isEmpty = true;
   }
 
   /**
@@ -41,9 +41,9 @@ module.exports = class WriteOperation{
    * @returns {void}
    */
   add( key, value, callback ) {
-    this._writeBuffer[ key ] = value
-    this._callbacks.push( callback )
-    this.isEmpty = false
+    this._writeBuffer[ key ] = value;
+    this._callbacks.push( callback );
+    this.isEmpty = false;
   }
 
   /**
@@ -53,9 +53,9 @@ module.exports = class WriteOperation{
    * @returns {void}
    */
   execute() {
-    new Write( this._params, this._writeBuffer, this._callbacks, this._dbConnector )
-    this._writeBuffer = {}
-    this._callbacks = []
-    this.isEmpty = true
+    new Write( this._params, this._writeBuffer, this._callbacks, this._dbConnector );
+    this._writeBuffer = {};
+    this._callbacks = [];
+    this.isEmpty = true;
   }
-}
+};

@@ -1,6 +1,6 @@
-'use strict'
+"use strict";
 
-const EventEmitter = require( 'events' ).EventEmitter
+const EventEmitter = require( "events" ).EventEmitter;
 
 /**
  * This class subscribes to notification events for schemas
@@ -10,7 +10,7 @@ const EventEmitter = require( 'events' ).EventEmitter
  * each containing the table name and for INSERT, UPDATE and DELETE
  * the key for the affected item
  */
-module.exports = class SchemaListener{
+module.exports = class SchemaListener {
 
   /**
    * Creates the SchemaListener. This doesn't trigger
@@ -21,10 +21,10 @@ module.exports = class SchemaListener{
    * @constructor
    */
   constructor( connectionPool ) {
-    this._connectionPool = connectionPool
-    this._emitter = new EventEmitter()
-    this._client = null
-    this._releaseConnection = null
+    this._connectionPool = connectionPool;
+    this._emitter = new EventEmitter();
+    this._client = null;
+    this._releaseConnection = null;
   }
 
   /**
@@ -38,10 +38,10 @@ module.exports = class SchemaListener{
    * @returns {void}
    */
   getNotificationsForSchema( schema, callback, done ) {
-    const isSubscribedToSchema = this._emitter.listenerCount( schema ) > 0
-    this._emitter.on( schema, callback )
-    if( !isSubscribedToSchema ) {
-      this._subscribeToSchema( schema, done )
+    const isSubscribedToSchema = this._emitter.listenerCount( schema ) > 0;
+    this._emitter.on( schema, callback );
+    if ( !isSubscribedToSchema ) {
+      this._subscribeToSchema( schema, done );
     }
   }
 
@@ -57,15 +57,15 @@ module.exports = class SchemaListener{
    * @returns {void}
    */
   unsubscribeFromNotificationsForSchema( schema, callback, done ) {
-    if( arguments.lenght === 3 ) {
-      this._emitter.removeListener( schema, callback )
+    if ( arguments.lenght === 3 ) {
+      this._emitter.removeListener( schema, callback );
     } else {
-      this._emitter.removeAllListeners( schema )
-      done = callback
+      this._emitter.removeAllListeners( schema );
+      done = callback;
     }
 
-    if( this._emitter.listenerCount( schema ) === 0 ) {
-      this._client.query( 'UNLISTEN ' + schema + ';', done, null, true )
+    if ( this._emitter.listenerCount( schema ) === 0 ) {
+      this._client.query( "UNLISTEN " + schema + ";", done, null, true );
     }
   }
 
@@ -77,8 +77,8 @@ module.exports = class SchemaListener{
    * @returns {void}
    */
   destroy() {
-    if( this._releaseConnection ) {
-      this._releaseConnection()
+    if ( this._releaseConnection ) {
+      this._releaseConnection();
     }
   }
 
@@ -101,19 +101,19 @@ module.exports = class SchemaListener{
    * @returns {void}
    */
   _onNotification( msg ) {
-    var data = msg.payload.split( ':' ), i
-    if( data.length === 2 ) {
+    var data = msg.payload.split( ":" ), i;
+    if ( data.length === 2 ) {
       this._emitter.emit( msg.channel, {
         event: data[ 0 ],
-        table: data[ 1 ]
-      })
+        table: data[ 1 ],
+      });
     } else {
-      for( i = 2; i < data.length; i++ ) {
+      for ( i = 2; i < data.length; i++ ) {
         this._emitter.emit( msg.channel, {
           event: data[ 0 ],
           table: data[ 1 ],
-          key: data[ i ]
-        })
+          key: data[ i ],
+        });
       }
     }
   }
@@ -129,12 +129,12 @@ module.exports = class SchemaListener{
    */
   _connect( callback ) {
     this._connectionPool.connect( ( error, client, done ) => {
-      if( error ) console.log( error )
-      this._client = client
-      this._releaseConnection = done
-      this._client.on( 'notification', this._onNotification.bind( this ) )
-      callback()
-    })
+      if ( error ) { console.log( error ); }
+      this._client = client;
+      this._releaseConnection = done;
+      this._client.on( "notification", this._onNotification.bind( this ) );
+      callback();
+    });
   }
 
   /**
@@ -147,10 +147,10 @@ module.exports = class SchemaListener{
    * @returns {void}
    */
   _subscribeToSchema( schema, done ) {
-    if( !this._client ) {
-      this._connect( this._subscribeToSchema.bind( this, schema, done ) )
-      return
+    if ( !this._client ) {
+      this._connect( this._subscribeToSchema.bind( this, schema, done ) );
+      return;
     }
-    this._client.query( 'LISTEN ' + schema + ';', done )
+    this._client.query( "LISTEN " + schema + ";", done );
   }
-}
+};

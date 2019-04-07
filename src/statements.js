@@ -1,9 +1,9 @@
-'use strict'
+"use strict";
 
-module.exports = class Statements{
+module.exports = class Statements {
 
   constructor( options ) {
-    this._options = options
+    this._options = options;
   }
 
   /**
@@ -15,8 +15,8 @@ module.exports = class Statements{
    * @returns {String} postgres statement
    */
   createSchema( params ) {
-    this._checkParams( params, [ 'name' ] )
-    return `CREATE SCHEMA IF NOT EXISTS "${params.name}";`
+    this._checkParams( params, [ "name" ] );
+    return `CREATE SCHEMA IF NOT EXISTS "${params.name}";`;
   }
 
   /**
@@ -28,8 +28,8 @@ module.exports = class Statements{
    * @returns {String} postgres statement
    */
   destroySchema( params ) {
-    this._checkParams( params, [ 'name' ] )
-    return `DROP SCHEMA "${params.name}" CASCADE;`
+    this._checkParams( params, [ "name" ] );
+    return `DROP SCHEMA "${params.name}" CASCADE;`;
   }
 
   /**
@@ -42,45 +42,45 @@ module.exports = class Statements{
    * @returns {String} postgres statement
    */
   createTable( params ) {
-    this._checkParams( params, [ 'schema', 'table', 'owner' ])
+    this._checkParams( params, [ "schema", "table", "owner" ]);
 
-    var updateOn = [], statement
+    var updateOn = [], statement;
 
-    if( this._options.notifications.INSERT ) { updateOn.push( 'INSERT' ) }
-    if( this._options.notifications.UPDATE ) { updateOn.push( 'UPDATE' ) }
-    if( this._options.notifications.DELETE ) { updateOn.push( 'DELETE' ) }
+    if ( this._options.notifications.INSERT ) { updateOn.push( "INSERT" ); }
+    if ( this._options.notifications.UPDATE ) { updateOn.push( "UPDATE" ); }
+    if ( this._options.notifications.DELETE ) { updateOn.push( "DELETE" ); }
 
     statement = `
     CREATE TABLE "${params.schema}"."${params.table}"
     (
         id text NOT NULL,
-        val ${this._options.useJsonb ? 'jsonb' : 'text'} NOT NULL,
+        val ${this._options.useJsonb ? "jsonb" : "text"} NOT NULL,
         PRIMARY KEY (id)
     )
     WITH (
         OIDS = FALSE
     )
-    TABLESPACE pg_default;`
+    TABLESPACE pg_default;`;
 
     if (params.owner) {
       statement += `
     ALTER TABLE "${params.schema}"."${params.table}"
     OWNER to "${params.owner}";
-    `
+    `;
     }
 
-    if( updateOn.length > 0 ) {
+    if ( updateOn.length > 0 ) {
       statement += `
         CREATE TRIGGER "broadcast_update_${params.schema}_${params.table}"
-        AFTER ${updateOn.join( ' OR ' )} ON "${params.schema}"."${params.table}"
-        FOR EACH ROW EXECUTE PROCEDURE broadcast_update();`
+        AFTER ${updateOn.join( " OR " )} ON "${params.schema}"."${params.table}"
+        FOR EACH ROW EXECUTE PROCEDURE broadcast_update();`;
     }
 
-    if( this._options.notifications.CREATE_TABLE ) {
-      statement += `NOTIFY "${params.schema}", 'CREATE_TABLE:${params.table}';`
+    if ( this._options.notifications.CREATE_TABLE ) {
+      statement += `NOTIFY "${params.schema}", 'CREATE_TABLE:${params.table}';`;
     }
 
-    return statement
+    return statement;
   }
 
   /**
@@ -92,12 +92,12 @@ module.exports = class Statements{
    * @returns {String} postgres statement
    */
   get( params ) {
-    this._checkParams( params, [ 'schema', 'table', 'key' ])
+    this._checkParams( params, [ "schema", "table", "key" ]);
 
     return `
       SELECT val
       FROM "${params.schema}"."${params.table}"
-      WHERE id='${params.key}';`
+      WHERE id='${params.key}';`;
   }
 
   /**
@@ -110,19 +110,19 @@ module.exports = class Statements{
    * @returns {String} postgres statement
    */
   set( params, writeBuffer ) {
-    this._checkParams( params, [ 'schema', 'table' ])
+    this._checkParams( params, [ "schema", "table" ]);
 
-    var valueStrings = [], key
+    var valueStrings = [], key;
 
-    for( key in writeBuffer ) {
-      valueStrings.push(`('${key}','${JSON.stringify( writeBuffer[ key ] ).replace(/'/g, "''")}')`)
+    for ( key in writeBuffer ) {
+      valueStrings.push(`('${key}','${JSON.stringify( writeBuffer[ key ] ).replace(/'/g, "''")}')`);
     }
 
     return `
       INSERT INTO "${params.schema}"."${params.table}" (id, val)
-      VALUES ${valueStrings.join( ',' )}
+      VALUES ${valueStrings.join( "," )}
       ON CONFLICT (id)
-      DO UPDATE SET val = EXCLUDED.val;`
+      DO UPDATE SET val = EXCLUDED.val;`;
   }
 
   /**
@@ -134,12 +134,12 @@ module.exports = class Statements{
    * @returns {String} postgres statement
    */
   delete( params ) {
-    this._checkParams( params, [ 'schema', 'table', 'key' ])
+    this._checkParams( params, [ "schema", "table", "key" ]);
 
     return `
       DELETE FROM "${params.schema}"."${params.table}"
       WHERE id = '${params.key}';
-      SELECT delete_if_empty('${params.schema}','${params.table}');`
+      SELECT delete_if_empty('${params.schema}','${params.table}');`;
   }
 
   /**
@@ -196,8 +196,8 @@ module.exports = class Statements{
      $$ LANGUAGE plpgsql;
 
     SELECT version()
-    `
-    return statement
+    `;
+    return statement;
   }
 
   /**
@@ -211,7 +211,7 @@ module.exports = class Statements{
    * @returns {String} postgres statement
    */
   getOverview( params ) {
-    this._checkParams( params, [ 'schema' ])
+    this._checkParams( params, [ "schema" ]);
 
     return `
     SELECT
@@ -219,7 +219,7 @@ module.exports = class Statements{
       count_rows('${params.schema}', table_name) AS entries
     FROM information_schema.tables
     WHERE
-      table_schema = '${params.schema}'`
+      table_schema = '${params.schema}'`;
   }
 
   /**
@@ -233,10 +233,10 @@ module.exports = class Statements{
    * @returns {void}
    */
   _checkParams( params, expectedKeys ) {
-    for( var i = 0; i < expectedKeys.length; i++ ) {
-      if( params[ expectedKeys[ i ] ] === undefined ) {
-        console.log( expectedKeys[ i ] + ' not defined' )
+    for ( var i = 0; i < expectedKeys.length; i++ ) {
+      if ( params[ expectedKeys[ i ] ] === undefined ) {
+        console.log( expectedKeys[ i ] + " not defined" );
       }
     }
   }
-}
+};

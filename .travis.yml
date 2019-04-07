@@ -40,7 +40,7 @@ matrix:
 script:
   - createdb travis_ci_test
   - npm run test
-  - curl -o package.sh -L https://raw.githubusercontent.com/deepstreamIO/deepstream.io-connector-publishingtest/master/scripts/package.sh
+  - curl -o package.sh -L https://raw.githubusercontent.com/deepstreamIO/deepstream.io/connector-submodules/scripts/connector/package-connector.sh
   - bash package.sh
 
 deploy:
@@ -55,7 +55,7 @@ deploy:
       tags: true
 
 after_deploy:
-  - curl -o test.sh -L https://raw.githubusercontent.com/deepstreamIO/deepstream.io-connector-publishingtest/master/scripts/test.sh
+  - curl -o test.sh -L https://raw.githubusercontent.com/deepstreamIO/deepstream.io/connector-submodules/scripts/connector/test-connector.sh
   - chmod 555 test.sh
   - ./test.sh
 
