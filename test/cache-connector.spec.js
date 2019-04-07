@@ -5,13 +5,6 @@ const expect = require('chai').expect
 const DbConnector = require('../src/connector')
 const EventEmitter = require('events').EventEmitter
 
-process.env.PGHOST='localhost'
-process.env.PGPORT='5432'
-process.env.PGUSER=''
-process.env.PGPASSWORD=''
-process.env.PGDATABASE='postgres'
-
-
 const settings = {
   user: process.env.PGUSER,
   database: process.env.PGDATABASE,
