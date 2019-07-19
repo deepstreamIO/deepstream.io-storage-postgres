@@ -56,13 +56,21 @@ module.exports = class Connector extends events.EventEmitter {
    * @constructor
    * @returns {void}
    */
-  constructor( options ) {
+  constructor( options, services ) {
     super();
     this.isReady = false;
     this.name = pckg.name;
     this.version = pckg.version;
     this._structure = {};
     this.options = options;
+    this.services = services;
+
+    this.description = `postgres connection to ${this.options.host} and database ${this.options.database} ${pckg.version}`;
+  }
+
+  init () {
+    this.on('error', error => this.services.logger.fatal(error));
+
     this._checkOptions();
     this.statements = new Statements( this.options );
     this._connectionPool = new pg.Pool( this.options );
@@ -71,7 +79,16 @@ module.exports = class Connector extends events.EventEmitter {
     this._writeOperations = {};
     this._initialise();
     this._flushInterval = setInterval( this._flushWrites.bind( this ), this.options.writeInterval );
-    this.type = `postgres connection to ${this.options.host} and database ${this.options.database}`;
+  }
+
+  async whenReady () {
+    if (!this.isReady) {
+      return new Promise(resolve => this.once('ready', resolve))
+    }
+  }
+
+  async close () {
+    return new Promise(resolve => this.destroy(resolve))
   }
 
   /**
@@ -188,7 +205,7 @@ module.exports = class Connector extends events.EventEmitter {
   * @public
   * @returns {void}
   */
-  set( key, value, callback ) {
+  set( key, version, value, callback ) {
     const params = utils.parseKey( key, this.options );
     const tableName = params.schema + params.table;
 
@@ -196,7 +213,7 @@ module.exports = class Connector extends events.EventEmitter {
       this._writeOperations[ tableName ] = new WriteOperation( params, this );
     }
 
-    this._writeOperations[ tableName ].add( params.key, value, callback );
+    this._writeOperations[ tableName ].add( params.key, { _d: value, _v: version }, callback );
   }
 
   /**
@@ -212,16 +229,17 @@ module.exports = class Connector extends events.EventEmitter {
   get( key, callback ) {
     this.query( this.statements.get( utils.parseKey( key, this.options ) ), ( error, result ) => {
       if ( error && error.code === UNDEFINED_TABLE ) {
-        callback( null, null );
+        callback( null, -1, null );
       } else if ( error ) {
         callback( error );
       } else if ( result.rows.length === 0 ) {
-        callback( null, null );
+        callback( null, -1, null );
       } else {
         if ( typeof result.rows[ 0 ].val !== "string" ) {
-          callback( null,  result.rows[ 0 ].val );
+          callback( null, result.rows[ 0 ].val._v, result.rows[ 0 ].val._d );
         } else {
-          callback( null, JSON.parse( result.rows[ 0 ].val ) );
+          const r = JSON.parse( result.rows[ 0 ].val )
+          callback( null, r._v, r._d );
         }
 
       }

@@ -1,11 +1,12 @@
 {
-  "name": "deepstream.io-storage-postgres",
-  "version": "1.1.5",
+  "name": "@deepstream/storage-postgres",
+  "version": "2.0.0",
   "description": "A deepstream.io storage connector for use with deepstream",
   "main": "src/connector.js",
   "scripts": {
     "test": "mocha",
-    "watch": "mocha -w"
+    "watch": "mocha -w",
+    "docker": "docker run -p 5432:5432 -e POSTGRES_PASSWORD=mysecretpassword postgres"
   },
   "repository": {
     "type": "git",
