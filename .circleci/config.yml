@@ -2,7 +2,7 @@ version: 2.1
 
 orbs:
   node: circleci/node@1.1.6
-  coveralls: coveralls/coveralls@1.0.4
+  # coveralls: coveralls/coveralls@1.0.4
 
 jobs:
   build-and-test:
@@ -32,7 +32,7 @@ jobs:
           root: /home/circleci
           paths:
             - circleci-build
-      - coveralls/upload
+      # - coveralls/upload
 
   deploy:
     docker:
