@@ -1,4 +1,5 @@
-# deepstream.io-storage-postgres
+# deepstream.io-storage-postgres  
+
 Postgres Database connector for deepstream.io
 
 This connector can be installed via the deepstream command line interface via
@@ -38,13 +39,13 @@ plugins:
 This connector can also be used as a standalone component from node.js to connect to postgres' notification mechanism. To do this, install the connector via
 
 ```
-npm install deepstream.io-storage-postgres
+npm install @deepstream/storage-postgres
 ```
 
 and instantiate it directly
 
 ```javascript
-const PostgresConnector = require( 'deepstream.io-storage-postgres' );
+const PostgresConnector = require( '@deepstream/storage-postgres' );
 const settings = {
   user: process.env.PG_USER,
   database: process.env.PG_DB,
@@ -80,3 +81,9 @@ connector.on( 'ready', ()=>{
     })
 })
 ```
+
+## Deepstream v3 users  
+
+Install with `npm install deepstreamIO/deepstream.io-storage-postgres#v3`
+
+Require as `require( 'deepstream.io-storage-postgres' )`  

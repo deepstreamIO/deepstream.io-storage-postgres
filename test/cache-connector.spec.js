@@ -6,11 +6,11 @@ const DbConnector = require("../src/connector");
 const EventEmitter = require("events").EventEmitter;
 
 const settings = {
-  user: process.env.PGUSER,
-  database: process.env.PGDATABASE,
-  password: process.env.PGPASSWORD,
-  host: process.env.PGHOST,
-  port: parseInt( process.env.PGPORT, 10 ),
+  user: process.env.PGUSER || 'postgres',
+  database: process.env.PGDATABASE || 'postgres',
+  password: process.env.PGPASSWORD || 'mysecretpassword',
+  host: process.env.PGHOST || 'localhost',
+  port: parseInt( process.env.PGPORT, 10 ) || 5432,
   max: 10,
   idleTimeoutMillis: 30000,
   notifications: {
@@ -26,19 +26,13 @@ describe("connector", () => {
   describe( "the message connector has the correct structure", () => {
     var dbConnector;
 
-    it( "throws an error if required connection parameters are missing", () => {
-      expect( () => { new DbConnector( "gibberish" ); } ).to.throw();
-    });
-
-    it( "creates the dbConnector", ( done ) => {
+    it( "creates the dbConnector", async () => {
       dbConnector = new DbConnector( settings );
-      expect( dbConnector.isReady ).to.equal( false );
-      dbConnector.on( "ready", done );
+      dbConnector.init()
+      await dbConnector.whenReady();
     });
 
     it( "implements the cache/storage connector interface", () =>  {
-      expect( dbConnector.name ).to.be.a( "string" );
-      expect( dbConnector.version ).to.be.a( "string" );
       expect( dbConnector.get ).to.be.a( "function" );
       expect( dbConnector.set ).to.be.a( "function" );
       expect( dbConnector.delete ).to.be.a( "function" );
@@ -58,6 +52,7 @@ describe("connector", () => {
 
       for ( i = 0; i < num; i++ ) {
         conn = new DbConnector( settings );
+        conn.init()
         conn.on( "ready", () => {
           ready++;
           if ( ready === num ) {
@@ -88,6 +83,7 @@ describe("connector", () => {
     it( "creates the dbConnector", ( done ) => {
       dbConnector = new DbConnector( settings );
       expect( dbConnector.isReady ).to.equal( false );
+      dbConnector.init()
       dbConnector.on( "ready", done );
     });
 
@@ -118,6 +114,7 @@ describe("connector", () => {
 
     it( "creates the dbConnector", ( done ) => {
       dbConnector = new DbConnector( settings );
+      dbConnector.init()
       expect( dbConnector.isReady ).to.equal( false );
       dbConnector.on( "ready", done );
     });
@@ -130,8 +127,9 @@ describe("connector", () => {
     });
 
     it( "retrieves a non existing value", ( done ) => {
-      dbConnector.get( ITEM_NAME, ( error, value ) => {
+      dbConnector.get( ITEM_NAME, ( error, version, value ) => {
         expect( error ).to.equal( null );
+        expect( version ).to.equal( -1 );
         expect( value ).to.equal( null );
         done();
       });
@@ -139,7 +137,7 @@ describe("connector", () => {
 
     it( "sets a value for a non existing table", ( done ) => {
       expect( lastMessage ).to.be.null;
-      dbConnector.set( ITEM_NAME, {  _d: { v: 10 }, firstname: "Wolfram" }, ( error ) => {
+      dbConnector.set( ITEM_NAME, 10,{ firstname: "Wolfram" }, ( error ) => {
         expect( error ).to.equal( null );
         //give it some time to receive the notifications
         setTimeout( done, 300 );
@@ -153,16 +151,17 @@ describe("connector", () => {
     });
 
     it( "retrieves an existing value", ( done ) => {
-      dbConnector.get( ITEM_NAME, ( error, value ) => {
+      dbConnector.get( ITEM_NAME, ( error, version, value ) => {
         expect( error ).to.equal( null );
-        expect( value ).to.deep.equal( {  _d: { v: 10 }, firstname: "Wolfram" } );
+        expect( version ).to.equal(10);
+        expect( value ).to.deep.equal( { firstname: "Wolfram" } );
         done();
       });
     });
 
     it( "sets a value for an existing table", ( done ) => {
       expect( messages.length ).to.equal( 2 );
-      dbConnector.set( "some-table/another-key", {  _d: { v: 10 }, firstname: "Egon" }, ( error ) => {
+      dbConnector.set( "some-table/another-key", 10 , { firstname: "Egon" }, ( error ) => {
         expect( error ).to.equal( null );
         //give it some time to receive the notifications
         setTimeout( done, 300 );
@@ -188,8 +187,9 @@ describe("connector", () => {
     });
 
     it( "Can't retrieve a deleted value", ( done ) => {
-      dbConnector.get( ITEM_NAME, ( error, value ) => {
+      dbConnector.get( ITEM_NAME, ( error, version, value ) => {
         expect( error ).to.equal( null );
+        expect( version ).to.equal( -1 );
         expect( value ).to.equal( null );
         done();
       });
@@ -206,6 +206,7 @@ describe("connector", () => {
 
     it( "creates the dbConnector", ( done ) => {
       dbConnector = new DbConnector( settings );
+      dbConnector.init();
       expect( dbConnector.isReady ).to.equal( false );
       dbConnector.on( "ready", done );
     });
@@ -217,35 +218,35 @@ describe("connector", () => {
     });
 
     it( "sets a value for a non existing table", ( done ) => {
-      dbConnector.set( ITEM_NAME, {  _d: { v: 10 }, testValue: "A" }, ( error ) => {
+      dbConnector.set( ITEM_NAME, 10, { testValue: "A" }, ( error ) => {
         expect( error ).to.equal( null );
         done();
       });
     });
 
     it( "sets value B", ( done ) => {
-      dbConnector.set( ITEM_NAME, {  _d: { v: 10 }, testValue: "B" }, ( error ) => {
+      dbConnector.set( ITEM_NAME, 10, { testValue: "B" }, ( error ) => {
         expect( error ).to.equal( null );
         done();
       });
     });
 
     it( "sets value C", ( done ) => {
-      dbConnector.set( ITEM_NAME, {  _d: { v: 10 }, testValue: "C" }, ( error ) => {
+      dbConnector.set( ITEM_NAME, 10, { testValue: "C" }, ( error ) => {
         expect( error ).to.equal( null );
         done();
       });
     });
 
     it( "sets value D", ( done ) => {
-      dbConnector.set( ITEM_NAME, {  _d: { v: 10 }, testValue: "D" }, ( error ) => {
+      dbConnector.set( ITEM_NAME, 10, { testValue: "D" }, ( error ) => {
         expect( error ).to.equal( null );
         done();
       });
     });
 
     it( "gets the latest value", ( done ) => {
-      dbConnector.get( ITEM_NAME, ( error, item ) => {
+      dbConnector.get( ITEM_NAME, ( error, version, item ) => {
         expect( error ).to.be.null;
         expect( item.testValue ).to.equal( "D" );
         done();
@@ -260,18 +261,18 @@ describe("connector", () => {
     });
 
     it( "writes multiple values in quick succession to an existing table", ( done ) => {
-      dbConnector.set( "some-table/itemA", { val: 1 }, () => {});
-      dbConnector.set( "some-table/itemA", { val: 2 }, () => {});
-      dbConnector.set( "some-table/itemA", { val: 3 }, () => {});
-      dbConnector.set( "some-table/itemA", { val: 4 }, () => {});
-      dbConnector.set( "some-table/itemA", { val: 5 }, ( error ) => {
+      dbConnector.set( "some-table/itemA", 1, { val: 1 }, () => {});
+      dbConnector.set( "some-table/itemA", 1, { val: 2 }, () => {});
+      dbConnector.set( "some-table/itemA", 1, { val: 3 }, () => {});
+      dbConnector.set( "some-table/itemA", 1, { val: 4 }, () => {});
+      dbConnector.set( "some-table/itemA", 1, { val: 5 }, ( error ) => {
         expect( error ).to.be.null;
         done();
       });
     });
 
     it( "retrieves the latest item from the last operation", ( done ) => {
-      dbConnector.get( "some-table/itemA", ( error, item ) => {
+      dbConnector.get( "some-table/itemA", ( error, version, item ) => {
         expect( error ).to.be.null;
         expect( item.val ).to.equal( 5 );
         done();
@@ -287,18 +288,18 @@ describe("connector", () => {
     });
 
     it( "writes multiple values in quick succession to a new table", ( done ) => {
-      dbConnector.set( "new-table/itemA", { val: 6 }, () => {});
-      dbConnector.set( "new-table/itemA", { val: 7 }, () => {});
-      dbConnector.set( "new-table/itemA", { val: 8 }, () => {});
-      dbConnector.set( "new-table/itemA", { val: 9 }, () => {});
-      dbConnector.set( "new-table/itemA", { val: 10 }, ( error ) => {
+      dbConnector.set( "new-table/itemA", 1, { val: 6 }, () => {});
+      dbConnector.set( "new-table/itemA", 1, { val: 7 }, () => {});
+      dbConnector.set( "new-table/itemA", 1, { val: 8 }, () => {});
+      dbConnector.set( "new-table/itemA", 1, { val: 9 }, () => {});
+      dbConnector.set( "new-table/itemA", 1, { val: 10 }, ( error ) => {
         expect( error ).to.be.null;
         done();
       });
     });
 
     it( "retrieves the latest item from the last operation", ( done ) => {
-      dbConnector.get( "new-table/itemA", ( error, item ) => {
+      dbConnector.get( "new-table/itemA", ( error, version, item ) => {
         expect( error ).to.be.null;
         expect( item.val ).to.equal( 10 );
         done();
@@ -324,36 +325,36 @@ describe("connector", () => {
         }
       });
 
-      dbConnector.set( "table-a/item-a", { val: "aa" }, (error) => {
+      dbConnector.set( "table-a/item-a", 1, { val: "aa" }, (error) => {
         expect( error ).to.be.null;
-        dbConnector.get( "table-a/item-a", ( error, item ) => {
+        dbConnector.get( "table-a/item-a", ( error, version, item ) => {
           expect( error ).to.be.null;
           expect( item.val ).to.equal( "aa" );
           doneListener.emit("set-get-done", "aa");
         });
       });
 
-      dbConnector.set( "table-a/item-b", { val: "ab" }, (error) => {
+      dbConnector.set( "table-a/item-b", 1, { val: "ab" }, (error) => {
         expect( error ).to.be.null;
-        dbConnector.get( "table-a/item-b", ( error, item ) => {
+        dbConnector.get( "table-a/item-b", ( error, version, item ) => {
           expect( error ).to.be.null;
           expect( item.val ).to.equal( "ab" );
           doneListener.emit("set-get-done", "ab");
         });
       });
 
-      dbConnector.set( "table-b/item-a", { val: "ba" }, (error) => {
+      dbConnector.set( "table-b/item-a", 1, { val: "ba" }, (error) => {
         expect( error ).to.be.null;
-        dbConnector.get( "table-b/item-a", ( error, item ) => {
+        dbConnector.get( "table-b/item-a", ( error, version, item ) => {
           expect( error ).to.be.null;
           expect( item.val ).to.equal( "ba" );
           doneListener.emit("set-get-done", "ba");
         });
       });
 
-      dbConnector.set( "table-b/item-b", { val: "bb" }, ( error ) => {
+      dbConnector.set( "table-b/item-b", 1, { val: "bb" }, ( error ) => {
         expect( error ).to.be.null;
-        dbConnector.get(  "table-b/item-b", ( error, item ) => {
+        dbConnector.get(  "table-b/item-b", ( error, version, item ) => {
           expect( error ).to.be.null;
           expect( item.val ).to.equal( "bb" );
           doneListener.emit("set-get-done", "bb");
@@ -445,7 +446,7 @@ describe("connector", () => {
 
     it( "receives notifications while still subscribed", ( done ) => {
       messages = [];
-      dbConnector.set( "some-table/x1", { val: 42 }, () => {});
+      dbConnector.set( "some-table/x1", 1, { val: 42 }, () => {});
 
       setTimeout(() => {
         expect( messages.length ).to.equal( 1 );
@@ -458,7 +459,7 @@ describe("connector", () => {
 
     it( "doesn't receive notifications after unsubscribing", ( done ) => {
       messages = [];
-      dbConnector.set( "some-table/x2", { val: 43 }, ( err, result ) => {
+      dbConnector.set( "some-table/x2", 1, { val: 43 }, ( err, result ) => {
         expect( err ).to.be.null;
       });
       setTimeout(() => {
@@ -467,8 +468,8 @@ describe("connector", () => {
       }, 300 );
     });
 
-    it( "destroys the connector", done => {
-      dbConnector.destroy( done );
+    it( "destroys the connector", async () => {
+      await dbConnector.close( );
     });
   });
 
@@ -477,6 +478,7 @@ describe("connector", () => {
 
     it( "creates the dbConnector", ( done ) => {
       dbConnector = new DbConnector( settings );
+      dbConnector.init();
       expect( dbConnector.isReady ).to.equal( false );
       dbConnector.on( "ready", done );
     });

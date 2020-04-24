@@ -1,3 +1,8 @@
+## [2.0.0-] - 2020-04-22
+
+### Update
+    - Update to latest version to be in sync with deepstream server v4 and v5
+
 ## [1.1.5] - 2019-04-07
 
 ### Fix
