@@ -1,4 +1,9 @@
-## [2.0.0-] - 2020-04-22
+## [2.0.01] - 2020-04-24
+
+### Misc
+    - Updating dependencies
+
+## [2.0.0] - 2019-07-23
 
 ### Update
     - Update to latest version to be in sync with deepstream server v4 and v5
