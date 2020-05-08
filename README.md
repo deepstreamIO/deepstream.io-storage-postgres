@@ -56,6 +56,9 @@ const settings = {
 
 const connector = new PostgresConnector( settings )
 
+// start connector
+connector.init()
+
 connector.on( 'ready', ()=>{
     connector.subscribe( event =>{
         //event will be a map of event and table for CREATE_TABLE and DESTROY_TABLE
