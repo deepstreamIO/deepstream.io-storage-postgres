@@ -17,6 +17,7 @@ const Statements = require('./statements')
 const utils = require('./utils')
 const SchemaListener = require('./schema-listener')
 const WriteOperation = require('./write-operation')
+const transformData = require('./transform-data')
 
 /**
  * Class deepstream.io postgres database connector
@@ -211,7 +212,9 @@ module.exports = class Connector extends events.EventEmitter {
       this._writeOperations[ tableName ] = new WriteOperation(params, this)
     }
 
-    this._writeOperations[ tableName ].add(params.key, { _d: value, _v: version }, callback)
+    const data = transformData.transformValueForStorage(version, value)
+
+    this._writeOperations[ tableName ].add(params.key, data, callback)
   }
 
   /**
@@ -233,12 +236,9 @@ module.exports = class Connector extends events.EventEmitter {
       } else if (result.rows.length === 0) {
         callback(null, -1, null)
       } else {
-        if (typeof result.rows[ 0 ].val !== 'string') {
-          callback(null, result.rows[ 0 ].val._v, result.rows[ 0 ].val._d)
-        } else {
-          const r = JSON.parse(result.rows[ 0 ].val)
-          callback(null, r._v, r._d)
-        }
+        const value = transformData.transformValueFromStorage( result.rows[ 0 ].val )
+
+        callback(null, value._v, value._d)
       }
     }, null, true)
   }
