@@ -5,7 +5,7 @@ describe('various utils work', () => {
 
   describe('parses keys', () => {
     it('should use predefined default table name', () => {
-      expect(parseDSKey('myKey', { schema: 'bla', table: { defaultName: 'default' } } as any))
+      expect(parseDSKey('myKey', { schema: 'bla', defaultTable: 'default' } as any))
         .to.deep.equal({
           schema: 'bla',
           table: 'default',
@@ -16,9 +16,7 @@ describe('various utils work', () => {
     it('should use custom default table name', () => {
       const config = {
         schema: 'bla',
-        table: {
-          defaultName: 'customDefaultName',
-        },
+        defaultTable: 'customDefaultName'
       } as any
       expect(parseDSKey('myKey', config))
         .to.deep.equal({

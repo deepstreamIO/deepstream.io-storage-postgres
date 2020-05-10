@@ -19,9 +19,7 @@ export interface KeyParameters {
 export interface PostgresOptions {
   useJsonb: any
   splitChar: string,
-  table: {
-    defaultName: string
-  },
+  defaultTable: string,
   role: string,
    user: string, // User to use for this connection
        database: string, // Database to use. Every connection is scoped to a single db
@@ -45,9 +43,7 @@ const PostgresOptionsDefaults: DeepPartial<PostgresOptions> = {
   splitChar: '/',
   idleTimeoutMillis: 200,
   writeInterval: 200,
-  table: {
-    defaultName: 'default'
-  },
+  defaultTable: 'default',
   notifications: {
     CREATE_TABLE: true,
     DESTROY_TABLE: true,
