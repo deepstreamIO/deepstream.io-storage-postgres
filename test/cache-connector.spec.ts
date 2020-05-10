@@ -5,7 +5,7 @@ import { DeepstreamServices } from '@deepstream/types'
 
 const settings = {
   schema: 'test',
-  user: process.env.PGUSER || 'yasserf',
+  user: process.env.PGUSER || 'postgres',
   database: process.env.PGDATABASE || 'deepstream',
   password: process.env.PGPASSWORD || 'password',
   host: process.env.PGHOST || 'localhost',
