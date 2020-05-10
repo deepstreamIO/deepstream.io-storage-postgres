@@ -5,9 +5,9 @@ import { DeepstreamServices } from '@deepstream/types'
 
 const settings = {
   schema: 'test',
-  user: process.env.PGUSER || 'postgres',
-  database: process.env.PGDATABASE || 'deepstream',
-  password: process.env.PGPASSWORD || 'password',
+  user: process.env.POSTGRES_USER || 'postgres',
+  database: process.env.POSTGRES_DB || 'deepstream',
+  password: process.env.POSTGRES_PASSWORD || 'password',
   host: process.env.PGHOST || 'localhost',
   port: parseInt(process.env.PGPORT!, 10) || 5432,
   max: 10,
