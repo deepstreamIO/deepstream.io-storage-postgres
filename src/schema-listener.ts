@@ -39,8 +39,8 @@ export class SchemaListener {
   /**
    * Remove a subscription that was previously established using getNotificationsForSchema
    */
-  public unsubscribeFromNotificationsForSchema (schema: string, callback: NotificationCallback | Noop, done: Noop): void {
-    if (arguments.length === 3) {
+  public unsubscribeFromNotificationsForSchema (schema: string, callback: NotificationCallback | undefined, done: Noop): void {
+    if (callback) {
       this.emitter.removeListener(schema, callback)
     } else {
       this.emitter.removeAllListeners(schema)
@@ -106,7 +106,6 @@ export class SchemaListener {
    */
   private subscribeToSchema (schema: string, done: Noop) {
     if (this.client) {
-      console.log('listening to', schema)
       this.client.query(`LISTEN ${schema};`, done)
     } else {
       this.connect(this.subscribeToSchema.bind(this, schema, done))

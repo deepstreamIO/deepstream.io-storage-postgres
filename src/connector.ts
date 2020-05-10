@@ -5,9 +5,10 @@ import { DeepPartial, Dictionary } from 'ts-essentials'
 import { Statements} from './statements'
 import { SchemaListener, Noop, NotificationCallback } from './schema-listener'
 import { checkVersion, parseDSKey } from './utils'
-import { JSONObject } from '@deepstream/protobuf/dist/types/all'
 import { WriteOperation } from './write-operation'
+import { JSONObject } from '@deepstream/protobuf/dist/types/all'
 
+export type SchemaOverviewCallback = (error: Error | null, tables?: Dictionary<number>) => void
 export interface KeyParameters {
   schema: string,
   table: string,
@@ -67,6 +68,7 @@ const CONNECTION_REFUSED = 'ECONNREFUSED'
 export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
   public description: string
   public options: PostgresOptions
+  public statements: Statements
 
   private logger = { info: console.log, error: console.error }
   private writeOperations: Dictionary<WriteOperation> = {}
@@ -115,16 +117,28 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
   /**
    * Creates a new schema.
    */
-  public createSchema (name: string, callback: Noop) {
+  public createSchema (name: string): Promise<void>
+  public createSchema (name: string, callback?: Noop) {
     const statement = this.statements.createSchema({ name })
+    if (!callback) {
+      return new Promise((resolve, reject) => {
+        this.query( statement, (err) => err ? reject(err) : resolve(), [], true )
+      })
+    }
     this.query(statement, callback, [], true)
   }
 
   /**
    * Destroys a previously created schema and all the tables within it
    */
-  public destroySchema (name: string, callback: Noop) {
+  public destroySchema (name: string): Promise<void>
+  public destroySchema (name: string, callback?: Noop) {
     const statement = this.statements.destroySchema({ name })
+    if (!callback) {
+      return new Promise((resolve, reject) => {
+        this.query( statement, (err) => err ? reject(err): resolve(), [], true )
+      })
+    }
     this.query( statement, callback, [], true )
   }
 
@@ -132,20 +146,32 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
    * Returns a list of all the tables within a given schema
    * and the number of entries within each table
    */
-  public getSchemaOverview (name: string, callback: (error: Error | null, tables?: Dictionary<number>) => void) {
-    name = name || this.options.schema
-    const statement = this.statements.getOverview({ schema: name })
-    this.query(statement, (error, result) => {
-      if (error || !result) {
-        callback(error)
-        return
-      }
-      const tables: Dictionary<number> = {}
-      for (let i = 0; i < result.rows.length; i++ ) {
-        tables[result.rows[i].table] = result.rows[ i ].entries
-      }
-      callback( null, tables )
-    }, [], true )
+  public getSchemaOverview (schema: string): Promise<Dictionary<number>>
+  public getSchemaOverview (callback: SchemaOverviewCallback, schema?: string): void
+  public getSchemaOverview (callbackOrName: string | SchemaOverviewCallback = this.options.schema, schema?: string): Promise<Dictionary<number>> | void {
+    if (typeof callbackOrName === 'string' || callbackOrName === undefined) {
+      return new Promise((resolve, reject) => {
+        this.getOverview(callbackOrName ? callbackOrName : this.options.schema, (error, tables) => {
+          error ? reject(error) : resolve(tables)
+        })
+      })
+    }
+    this.getOverview(schema ? schema : this.options.schema, callbackOrName)
+  }
+
+  private getOverview (schema: string, callback: SchemaOverviewCallback) {
+    const statement = this.statements.getOverview({ schema })
+      this.query(statement, (error, result) => {
+        if (error || !result) {
+          callback(error)
+          return
+        }
+        const tables: Dictionary<number> = {}
+        for (let i = 0; i < result.rows.length; i++ ) {
+          tables[result.rows[i].table] = result.rows[ i ].entries
+        }
+        callback( null, tables )
+      }, [], true )
   }
 
   /**
@@ -153,16 +179,24 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
    * will be invoked every time a table was created or a record was created,
    * updated or deleted
    */
-  public subscribe (callback: NotificationCallback, done: Noop, schema?: string) {
-    schema = schema || this.options.schema
+  public subscribe (callback: NotificationCallback, done?: Noop, schema: string = this.options.schema) {
+    if (!done) {
+      return new Promise((resolve) =>
+        this.schemaListener.getNotificationsForSchema(schema, callback, resolve)
+      )
+    }
     this.schemaListener.getNotificationsForSchema(schema, callback, done)
   }
 
   /**
    * Remove a subscription that was previously established using getNotificationsForSchema
    */
-  public unsubscribe (callback: NotificationCallback, done: Noop, schema: string) {
-    schema = schema || this.options.schema
+  public unsubscribe (callback?: NotificationCallback, done?: Noop, schema: string = this.options.schema) {
+    if (!done) {
+      return new Promise((resolve) =>
+        this.schemaListener.unsubscribeFromNotificationsForSchema(schema, callback, resolve)
+      )
+    }
     this.schemaListener.unsubscribeFromNotificationsForSchema(schema, callback, done)
   }
 
