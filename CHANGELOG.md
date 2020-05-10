@@ -1,3 +1,16 @@
+## [3.0.0] - 2020-05-xx
+
+### Breaking Changes
+
+The database structure has changed to support V4 syntax fully.
+This means instead of storing data like `{ _ds: {}, _value: {} }` in the database 
+we now instead have three columns. id, version and val. This will make life alot
+easier when quering and storing data deepstream agnostic.
+
+The APIs for schema listening have also changed to support promises.
+
+Removed prefixing record names as it was a deepstreamHub
+
 ## [2.0.1] - 2020-04-24
 
 ### Misc
