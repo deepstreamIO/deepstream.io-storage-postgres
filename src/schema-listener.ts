@@ -1,7 +1,6 @@
 import { EventEmitter } from 'events'
 import * as pg from 'pg'
 import { EVENT, NamespacedLogger } from '@deepstream/types'
-import { exists } from 'fs'
 
 export type NotificationCallback = ({ event, table, key }: { event: string, table: string, key: string}) => void
 export type Noop = (error: Error | null) => void

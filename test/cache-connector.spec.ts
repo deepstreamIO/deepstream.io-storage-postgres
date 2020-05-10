@@ -1,6 +1,7 @@
 import { Connector } from '../src/connector'
 import { expect } from 'chai'
 import { EventEmitter } from 'events'
+import { DeepstreamServices } from '@deepstream/types'
 
 const settings = {
   schema: 'test',
@@ -20,12 +21,21 @@ const settings = {
   },
 }
 
+const services = {
+  logger: {
+    getNameSpace: () => ({
+      info: console.log,
+      error: console.error
+    })
+  }
+} as never as DeepstreamServices
+
 describe('connector', () => {
   describe( 'the message connector has the correct structure', () => {
     let dbConnector: Connector
 
     it( 'creates the dbConnector', async () => {
-      dbConnector = new Connector(settings, {} as any)
+      dbConnector = new Connector(settings, services)
       dbConnector.init()
       await dbConnector.whenReady()
     })
@@ -41,7 +51,7 @@ describe('connector', () => {
 
     it('creates four connectors', async () => {
       for (let i = 0; i < num; i++ ) {
-        const conn = new Connector(settings, {} as any)
+        const conn = new Connector(settings, services)
         conn.init()
         connectors.push( conn )
       }
@@ -57,7 +67,7 @@ describe('connector', () => {
     let dbConnector: Connector
 
     it( 'creates the dbConnector', async () => {
-      dbConnector = new Connector(settings, {} as any)
+      dbConnector = new Connector(settings, services)
       dbConnector.init()
       await dbConnector.whenReady()
     })
@@ -82,7 +92,7 @@ describe('connector', () => {
     const ITEM_NAME = 'some-table/some-key'
 
     it('creates the dbConnector', async () => {
-      dbConnector = new Connector(settings, {} as any)
+      dbConnector = new Connector(settings, services)
       dbConnector.init()
       await dbConnector.whenReady()
     })
@@ -174,7 +184,7 @@ describe('connector', () => {
     const ITEM_NAME = 'some-other-table/some-other-key'
 
     it( 'creates the dbConnector', async () => {
-      dbConnector = new Connector(settings, {} as any)
+      dbConnector = new Connector(settings, services)
       dbConnector.init()
       await dbConnector.whenReady()
     })
@@ -443,7 +453,7 @@ describe('connector', () => {
     let dbConnector: Connector
 
     it( 'creates the dbConnector', async () => {
-      dbConnector = new Connector(settings, {} as any)
+      dbConnector = new Connector(settings, services)
       dbConnector.init()
       await dbConnector.whenReady()
     })

@@ -70,7 +70,7 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
   public options: PostgresOptions
   public statements: Statements
 
-  private logger = { info: console.log, error: console.error }
+  private logger = this.services.logger.getNameSpace('POSTGRES')
   private writeOperations: Dictionary<WriteOperation> = {}
 
   private connectionPool!: pg.Pool
