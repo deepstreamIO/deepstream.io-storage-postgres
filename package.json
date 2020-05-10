@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@deepstream/protobuf": "^1.0.1",
+    "@deepstream/types": "^2.1.0",
     "@types/chai": "^4.2.11",
     "@types/mocha": "^7.0.2",
     "@types/mongodb": "^3.5.5",
