@@ -1,3 +1,6 @@
+coverage
+dist
+.nyc_output
 .idea
 node_modules
 npm-debug.log

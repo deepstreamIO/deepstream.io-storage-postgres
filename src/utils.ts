@@ -15,7 +15,7 @@ export const parseDSKey = (key: string, options: PostgresOptions): KeyParameters
   let table
   let id
   if (splitCharIndex === -1) {
-    table = options.table.defaultName
+    table = options.defaultTable
     id = key.replace(KEY_REGEXP, '')
   } else {
     table = key.substring(0, splitCharIndex).replace(KEY_REGEXP, '')

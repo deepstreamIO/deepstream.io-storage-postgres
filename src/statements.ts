@@ -17,7 +17,7 @@ export class Statements {
    * Deletes a schema and all the tables within it
    */
   destroySchema (params: { name: string }) {
-    return `DROP SCHEMA IF EXISTS "${params.name}" CASCADE;`
+    return `DROP SCHEMA "${params.name}" CASCADE;`
   }
 
   /**
