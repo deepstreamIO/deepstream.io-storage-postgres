@@ -228,8 +228,11 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
           callback(null, -1, null)
         }
         else {
-          const { version, val } = result.rows[0]
-          callback(null, version, JSON.parse(val))
+          let { version, val } = result.rows[0]
+          if (typeof val === 'string') {
+            val = JSON.parse(val)
+          }
+          callback(null, version, val)
         }
       }, [], true)
   }
