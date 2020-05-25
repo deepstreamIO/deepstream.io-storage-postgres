@@ -25,9 +25,8 @@ plugins:
         prefix: ds_ # table prefix defaults to empty string, so no prefix
       max: 10 #concurrent connections
       idleTimeoutMillis: 30000 #timeout after which connection will be cut
-      writeInterval: 200 #amout of milliseconds during which writes will be
+      writeInterval: 200 #amount of milliseconds during which writes will be buffered
       useJsonb: false #store values as searchable binary JSON (slower)
-      buffered
       notifications:
         CREATE_TABLE: false #Get notified when tables are created
         DESTROY_TABLE: false #Get notified when tables are dropped

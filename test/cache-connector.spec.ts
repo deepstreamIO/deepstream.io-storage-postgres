@@ -6,12 +6,13 @@ import { EventEmitter } from 'events'
 import { DeepstreamServices } from '@deepstream/types'
 
 const settings = {
-  schema: 'test',
+  schema: '__dstest',
   user: process.env.POSTGRES_USER || 'postgres',
   database: process.env.POSTGRES_DB || 'postgres',
   password: process.env.POSTGRES_PASSWORD || 'mysecretpassword',
   host: process.env.PGHOST || 'localhost',
   port: parseInt(process.env.PGPORT!, 10) || 5432,
+  useJsonb: true, // store values as searchable binary JSON (slower)
   max: 10,
   idleTimeoutMillis: 30000,
   notifications: {
@@ -77,11 +78,11 @@ describe('connector', () => {
     })
 
     it('creates a schema', async () => {
-      dbConnector.createSchema('some-schema')
+      dbConnector.createSchema(settings.schema)
     })
 
     it('deletes a schema', async () => {
-      await dbConnector.destroySchema('some-schema')
+      await dbConnector.destroySchema(settings.schema)
     })
 
     it('destroys the connector', async () => {
@@ -194,11 +195,11 @@ describe('connector', () => {
     })
 
     it('deletes the possible schema', async () => {
-      await dbConnector.destroySchema('test')
+      await dbConnector.destroySchema(settings.schema)
     })
 
     it('creates the possible schema', async () => {
-      await dbConnector.createSchema('test')
+      await dbConnector.createSchema(settings.schema)
     })
 
     it('subscribes to notifications', async () => {
@@ -463,16 +464,16 @@ describe('connector', () => {
     })
 
     it('creates a database', async () => {
-      await dbConnector.createSchema('ds')
+      await dbConnector.createSchema(settings.schema)
     })
 
     it('destroys a database', async () => {
-      await dbConnector.destroySchema('ds')
+      await dbConnector.destroySchema(settings.schema)
     })
 
     it('fails when trying to delete a non existing database', async () => {
       try {
-        await dbConnector.destroySchema('ds')
+        await dbConnector.destroySchema(settings.schema)
         throw new Error('An error should have been thrown')
       } catch (e) {
       }
