@@ -8,10 +8,9 @@ plugins:
       host: localhost
       port: 5432
       schema: ds
-      table:
-        defaultName: default
-        prefix: ds
+      defaultTable: default
       max: 10
+      useJsonb: false
       idleTimeoutMillis: 30000
       writeInterval: 200
       notifications:
