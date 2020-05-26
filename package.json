@@ -2,7 +2,7 @@
   "name": "@deepstream/storage-postgres",
   "version": "3.0.0",
   "description": "A deepstream.io storage connector for use with deepstream",
-  "main": "src/connector.js",
+  "main": "dist/src/connector.js",
   "scripts": {
     "tsc": "tsc",
     "lint": "tslint --project .",

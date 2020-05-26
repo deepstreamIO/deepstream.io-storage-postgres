@@ -1,10 +1,11 @@
 import * as pg from 'pg'
 import * as pkg from '../package.json'
-import { DeepstreamPlugin, DeepstreamStorage, DeepstreamServices, StorageWriteCallback, StorageReadCallback, EVENT } from '@deepstream/types'
+import { DeepstreamPlugin, DeepstreamStorage, NamespacedLogger, DeepstreamServices, StorageWriteCallback, StorageReadCallback, EVENT } from '@deepstream/types'
 import { DeepPartial, Dictionary } from 'ts-essentials'
 import { Statements } from './statements'
 import { SchemaListener, Noop, NotificationCallback } from './schema-listener'
 import { checkVersion, parseDSKey } from './utils'
+import { StdOutLogger } from './std-out-logger'
 import { WriteOperation } from './write-operation'
 import { JSONObject } from '@deepstream/protobuf/dist/types/all'
 
@@ -66,7 +67,7 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
   public options: PostgresOptions
   public statements: Statements
 
-  private logger = this.services.logger.getNameSpace('POSTGRES')
+  private logger: NamespacedLogger
   private writeOperations: Dictionary<WriteOperation> = {}
 
   private connectionPool!: pg.Pool
@@ -77,6 +78,13 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
     this.options = { ...PostgresOptionsDefaults, ...options } as PostgresOptions
     this.description = `Postgres connection to ${this.options.host} and database ${this.options.database} ${pkg.version}`
     this.statements = new Statements(this.options)
+
+    if (this.services) {
+      this.logger = this.services.logger.getNameSpace('POSTGRES')
+    } else {
+      const logger = new StdOutLogger()
+      this.logger = logger.getNameSpace('POSTGRES')
+    }
   }
 
   init() {
@@ -321,7 +329,7 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
    */
   private checkError(error: any, client: pg.PoolClient) {
     if (error && error.code !== DATABASE_IS_STARTING_UP && error.code !== CONNECTION_REFUSED) {
-      this.logger.info(EVENT.ERROR, error.namen)
+      this.logger.info(EVENT.ERROR, error.name)
     }
   }
 }
