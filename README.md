@@ -20,9 +20,7 @@ plugins:
       host: localhost
       port: 5432 #postgres default post
       schema: ds #schema defaults to ds. Will be created if it doesn't exist
-      table:
-        defaultName: default # default table name defaults to default
-        prefix: ds_ # table prefix defaults to empty string, so no prefix
+      defaultTable: default # default table name defaults to default
       max: 10 #concurrent connections
       idleTimeoutMillis: 30000 #timeout after which connection will be cut
       writeInterval: 200 #amount of milliseconds during which writes will be buffered
