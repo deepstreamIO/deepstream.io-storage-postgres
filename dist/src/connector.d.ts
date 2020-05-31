@@ -121,3 +121,4 @@ export declare class Connector extends DeepstreamPlugin implements DeepstreamSto
      */
     private checkError;
 }
+export default Connector;

@@ -255,4 +255,5 @@ class Connector extends types_1.DeepstreamPlugin {
     }
 }
 exports.Connector = Connector;
+exports.default = Connector;
 //# sourceMappingURL=connector.js.map
