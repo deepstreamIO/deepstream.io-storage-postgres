@@ -53,6 +53,9 @@ const settings = {
 
 const connector = new PostgresConnector( settings )
 
+// start connector
+connector.init()
+
 connector.on( 'ready', ()=>{
     connector.subscribe( event =>{
         //event will be a map of event and table for CREATE_TABLE and DESTROY_TABLE
@@ -79,8 +82,20 @@ connector.on( 'ready', ()=>{
 })
 ```
 
+## Installing and migrating to the latest connector version  
+
+The latest connector version (3.x) introduces breaking changes at database level for a cleaner data structure: one column for id, one for version, one for value. It has not been published to npm in order to avoid disrupting current users installation from the deepstream CLI.
+
+In order to install it run `npm install github:deepstreamIO/deepstream.io-storage-postgres`.  
+
+Require as `const { Connector } = require('@deepstream/storage-postgres')`
+
+For migrating a current database from the v2 connector to v3 check out [this script](https://gist.github.com/jaime-ez/68353c7dfbd00decbcfd6ab394cfb2a8)
+
+
+
 ## Deepstream v3 users  
 
-Install with `npm install deepstreamIO/deepstream.io-storage-postgres#v3`
+For user of the deepstream server version 3.x, install the connector with `npm install deepstreamIO/deepstream.io-storage-postgres#v1.1.5`.
 
 Require as `require( 'deepstream.io-storage-postgres' )`  
