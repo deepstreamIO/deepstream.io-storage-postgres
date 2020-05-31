@@ -334,3 +334,5 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
     }
   }
 }
+
+export default Connector

@@ -88,8 +88,6 @@ The latest connector version (3.x) introduces breaking changes at database level
 
 In order to install it run `npm install github:deepstreamIO/deepstream.io-storage-postgres`.  
 
-Require as `const { Connector } = require('@deepstream/storage-postgres')`
-
 For migrating a current database from the v2 connector to v3 check out [this script](https://gist.github.com/jaime-ez/68353c7dfbd00decbcfd6ab394cfb2a8)
 
 

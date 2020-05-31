@@ -1,3 +1,8 @@
+## [3.0.1] - 2020-05-31
+
+### Fix
+    - Export Connector as default
+
 ## [3.0.0] - 2020-05-24
 
 ### Breaking Changes
