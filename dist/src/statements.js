@@ -82,7 +82,7 @@ class Statements {
       INSERT INTO "${params.schema}"."${params.table}" (id, version, val)
       VALUES ${valueStrings.join(',')}
       ON CONFLICT (id)
-      DO UPDATE SET val = EXCLUDED.val;`;
+      DO UPDATE SET val = EXCLUDED.val, version = EXCLUDED.version;`;
     }
     /**
      * Deletes a value from a table
