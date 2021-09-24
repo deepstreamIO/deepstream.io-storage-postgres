@@ -1,3 +1,11 @@
+## [3.0.5] - 2021-09-23
+
+### Task
+    - Provide 'ds' as default schema name.
+
+### Misc
+    - Update deps
+
 ## [3.0.4] - 2020-10-11
 
 ### Task
