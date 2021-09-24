@@ -45,6 +45,7 @@ const PostgresOptionsDefaults: DeepPartial<PostgresOptions> = {
   idleTimeoutMillis: 200,
   writeInterval: 200,
   defaultTable: 'default',
+  schema: 'ds',
   notifications: {
     CREATE_TABLE: true,
     DESTROY_TABLE: true,
