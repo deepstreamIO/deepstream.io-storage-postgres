@@ -1,4 +1,4 @@
-# deepstream.io-storage-postgres  
+# deepstream.io-storage-postgres
 
 Postgres Database connector for deepstream.io
 
@@ -42,7 +42,7 @@ npm install @deepstream/storage-postgres
 and instantiate it directly
 
 ```javascript
-const PostgresConnector = require( '@deepstream/storage-postgres' );
+const { Connector } = require( '@deepstream/storage-postgres' );
 const settings = {
   user: process.env.PG_USER,
   database: process.env.PG_DB,
@@ -51,7 +51,7 @@ const settings = {
   port: parseInt( process.env.PG_PORT, 10 )
 }
 
-const connector = new PostgresConnector( settings )
+const connector = new Connector( settings )
 
 // start connector
 connector.init()
@@ -82,18 +82,18 @@ connector.on( 'ready', ()=>{
 })
 ```
 
-## Migrating to the latest connector version  
+## Migrating to the latest connector version
 
 The latest connector version (3.x) introduces breaking changes at database level for a cleaner data structure: one column for id, one for version, one for value.
 
 For migrating a current database from the v2 connector to v3 check out [this script](https://gist.github.com/jaime-ez/68353c7dfbd00decbcfd6ab394cfb2a8)
 
-## Installing the previous connector version  
+## Installing the previous connector version
 
-`npm i @deepstream/storage-postgres@2.0.1`  
+`npm i @deepstream/storage-postgres@2.0.1`
 
-## Deepstream v3 users  
+## Deepstream v3 users
 
 For user of the deepstream server version 3.x, install the connector with `npm install deepstreamIO/deepstream.io-storage-postgres#v1.1.5`.
 
-Require as `require( 'deepstream.io-storage-postgres' )`  
+Require as `require( 'deepstream.io-storage-postgres' )`
