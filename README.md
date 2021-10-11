@@ -2,35 +2,35 @@
 
 Postgres Database connector for deepstream.io
 
-This connector can be installed via the deepstream command line interface via
+This connector is automatically installed when using the deepstream server > v5. It can also be installed via the deepstream command line interface via
+
 ```
 deepstream install storage postgres
 ```
 
-and can be configured in the `plugins storage` section of deepstreams config.yml. Supported options are
+and can be configured in the `storage` section of deepstreams config.yml. Supported options are
 
 ```yaml
-plugins:
-  storage:
-    name: postgres
-    options:
-      user: some-user
-      database: some-database
-      password: some-password
-      host: localhost
-      port: 5432 #postgres default post
-      schema: ds #schema defaults to ds. Will be created if it doesn't exist
-      defaultTable: default # default table name defaults to default
-      max: 10 #concurrent connections
-      idleTimeoutMillis: 30000 #timeout after which connection will be cut
-      writeInterval: 200 #amount of milliseconds during which writes will be buffered
-      useJsonb: false #store values as searchable binary JSON (slower)
-      notifications:
-        CREATE_TABLE: false #Get notified when tables are created
-        DESTROY_TABLE: false #Get notified when tables are dropped
-        INSERT: false # Get notified when records are created
-        UPDATE: false # Get notified when records are updated
-        DELETE: false # Get notified when records are deleted
+storage:
+  name: postgres
+  options:
+    user: some-user
+    database: some-database
+    password: some-password
+    host: localhost
+    port: 5432 #postgres default post
+    schema: ds #schema defaults to ds. Will be created if it doesn't exist
+    defaultTable: default # default table name defaults to default
+    max: 10 #concurrent connections
+    idleTimeoutMillis: 30000 #timeout after which connection will be cut
+    writeInterval: 200 #amount of milliseconds during which writes will be buffered
+    useJsonb: false #store values as searchable binary JSON (slower)
+    notifications:
+      CREATE_TABLE: false #Get notified when tables are created
+      DESTROY_TABLE: false #Get notified when tables are dropped
+      INSERT: false # Get notified when records are created
+      UPDATE: false # Get notified when records are updated
+      DELETE: false # Get notified when records are deleted
 ```
 
 This connector can also be used as a standalone component from node.js to connect to postgres' notification mechanism. To do this, install the connector via
