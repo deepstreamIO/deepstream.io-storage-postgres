@@ -1,3 +1,10 @@
+## [3.0.8] - 2023-10-04
+
+### Misc
+    - Update deps
+### Fix
+    - Better error log messages
+
 ## [3.0.7] - 2021-10-10
 
 ### Misc
