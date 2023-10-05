@@ -126,7 +126,7 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
   public createSchema (name: string, callback?: Noop) {
     const statement = this.statements.createSchema({ name })
     if (!callback) {
-      return new Promise((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
         this.query(statement, (err) => err ? reject(err) : resolve(), [], true)
       })
     }
@@ -140,7 +140,7 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
   public destroySchema (name: string, callback?: Noop) {
     const statement = this.statements.destroySchema({ name })
     if (!callback) {
-      return new Promise((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
         this.query(statement, (err) => err ? reject(err) : resolve(), [], true)
       })
     }
@@ -153,11 +153,11 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
    */
   public getSchemaOverview (schema: string): Promise<Dictionary<number>>
   public getSchemaOverview (callback: SchemaOverviewCallback, schema?: string): void
-  public getSchemaOverview (callbackOrName: string | SchemaOverviewCallback = this.options.schema, schema?: string): Promise<Dictionary<number>> | void {
+  public getSchemaOverview (callbackOrName: string | SchemaOverviewCallback = this.options.schema, schema?: string): Promise<Dictionary<number>| void> | void {
     if (typeof callbackOrName === 'string' || callbackOrName === undefined) {
       return new Promise((resolve, reject) => {
         this.getOverview(callbackOrName ? callbackOrName : this.options.schema, (error, tables) => {
-          error ? reject(error) : resolve(tables)
+          return error ? reject(error) : resolve(tables)
         })
       })
     }
@@ -263,7 +263,7 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
   /**
    * Low level interface to execute postgreSQL queries.
    */
-  public query<Result> (query: string, callback: (err: Error, result?: pg.QueryResult<any>) => void, args: any[] = [], silent: boolean = false) {
+  public query<Result extends pg.QueryResultRow> (query: string, callback: (err: Error, result?: pg.QueryResult<any>) => void, args: any[] = [], silent: boolean = false) {
     this.connectionPool.connect((error, client, done) => {
       this.checkError(error, client)
       if (error) {
@@ -331,7 +331,7 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
    */
   private checkError (error: any, client: pg.PoolClient) {
     if (error && error.code !== DATABASE_IS_STARTING_UP && error.code !== CONNECTION_REFUSED) {
-      this.logger.info(EVENT.ERROR, error.name)
+      this.logger.error(EVENT.ERROR, error, { code: error.code })
     }
   }
 }

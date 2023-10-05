@@ -1,6 +1,10 @@
 import { DeepstreamPlugin, DeepstreamLogger, LOG_LEVEL, NamespacedLogger, EVENT, MetaData } from '@deepstream/types'
 import { EOL } from 'os'
 
+interface ErrorCode extends MetaData {
+  code?: number
+}
+
 export class StdOutLogger extends DeepstreamPlugin implements DeepstreamLogger {
   public description = 'std out/err'
 
@@ -32,12 +36,12 @@ export class StdOutLogger extends DeepstreamPlugin implements DeepstreamLogger {
     this.log(LOG_LEVEL.INFO, '', event, logMessage)
   }
 
-  public warn (event: EVENT, logMessage: string, metaData?: MetaData): void {
-    this.log(LOG_LEVEL.WARN, '', event, logMessage, metaData)
+  public warn (event: EVENT, logMessage: string, errorCode?: ErrorCode): void {
+    this.log(LOG_LEVEL.WARN, '', event, logMessage, errorCode)
   }
 
-  public error (event: EVENT, logMessage: string, metaData?: MetaData): void {
-    this.log(LOG_LEVEL.ERROR, '', event, logMessage, metaData)
+  public error (event: EVENT, logMessage: string, errorCode?: ErrorCode): void {
+    this.log(LOG_LEVEL.ERROR, '', event, logMessage, errorCode)
   }
 
   public fatal (event: EVENT, logMessage: string): void {
@@ -65,12 +69,12 @@ export class StdOutLogger extends DeepstreamPlugin implements DeepstreamLogger {
   /**
    * Logs a line
    */
-  private log (logLevel: LOG_LEVEL, namespace: string, event: EVENT, logMessage: string, metaData: MetaData | null = null): void {
+  private log (logLevel: LOG_LEVEL, namespace: string, event: EVENT, logMessage: string, errorCode: ErrorCode | null = null): void {
     if (this.currentLogLevel > logLevel) {
       return
     }
 
-    const msg = `${namespace ? `${namespace} | ` : '' }${event} | ${logMessage}`
+    const msg = `${namespace ? `${namespace} | ` : '' }${event} | ${logMessage} ${errorCode ? `| code: ${errorCode.code}` : ''}`
     let outputStream
 
     if (logLevel === LOG_LEVEL.ERROR || logLevel === LOG_LEVEL.WARN) {
