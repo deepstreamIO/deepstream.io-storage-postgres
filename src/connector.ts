@@ -73,7 +73,7 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
 
   private connectionPool!: pg.Pool
   private schemaListener!: SchemaListener
-  private flushInterval!: NodeJS.Timer
+  private flushInterval!: NodeJS.Timeout
   constructor (options: DeepPartial<PostgresOptions>, private services: DeepstreamServices) {
     super()
     this.options = { ...PostgresOptionsDefaults, ...options } as PostgresOptions
@@ -265,18 +265,22 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
    */
   public query<Result extends pg.QueryResultRow> (query: string, callback: (err: Error, result?: pg.QueryResult<any>) => void, args: any[] = [], silent: boolean = false) {
     this.connectionPool.connect((error, client, done) => {
-      this.checkError(error, client)
+      this.checkError(error)
       if (error) {
         callback(error)
         return
       }
-      client.query<Result>(query, args, (queryError, result) => {
-        done()
-        if (!silent) {
-          this.checkError(queryError, client)
-        }
-        callback(queryError, result)
-      })
+      if (client) {
+        client.query<Result>(query, args, (queryError, result) => {
+          done()
+          if (!silent) {
+            this.checkError(queryError)
+          }
+          callback(queryError, result)
+        })
+      } else {
+        this.logger.error(EVENT.ERROR, 'pgClientUndefined')
+      }
     })
   }
 
@@ -329,7 +333,7 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
    * Basic check for errors. Just logs them to
    * stdout
    */
-  private checkError (error: any, client: pg.PoolClient) {
+  private checkError (error: any) {
     if (error && error.code !== DATABASE_IS_STARTING_UP && error.code !== CONNECTION_REFUSED) {
       this.logger.error(EVENT.ERROR, error, { code: error.code })
     }

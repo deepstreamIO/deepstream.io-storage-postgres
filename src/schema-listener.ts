@@ -93,10 +93,14 @@ export class SchemaListener {
       if (error) {
         this.logger.error(EVENT.ERROR, 'Error connecting to pg pool for schema listening')
       }
-      this.client = client
-      this.releaseConnection = done
-      this.client.on('notification', this.onNotification.bind(this))
-      callback()
+      if (client) {
+        this.client = client
+        this.releaseConnection = done
+        this.client.on('notification', this.onNotification.bind(this))
+        callback()
+      } else {
+        this.logger.error(EVENT.ERROR, 'pgClientUndefined')
+      }
     })
   }
 
