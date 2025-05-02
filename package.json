@@ -1,6 +1,6 @@
 {
   "name": "@deepstream/storage-postgres",
-  "version": "3.0.8",
+  "version": "3.0.9",
   "description": "A deepstream.io storage connector for use with deepstream",
   "main": "dist/src/connector.js",
   "scripts": {

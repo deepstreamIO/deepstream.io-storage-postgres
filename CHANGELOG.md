@@ -1,3 +1,14 @@
+## [3.0.9] - 2025-05-01
+
+### Chore
+    - Update deps
+
+### Fix
+    - tests are usable again
+
+### Misc
+    - Remove unused code and deps
+
 ## [3.0.8] - 2023-10-04
 
 ### Misc
