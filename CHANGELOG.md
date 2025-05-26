@@ -1,3 +1,8 @@
+## [3.0.10] - 2025-05-26
+
+### Fix
+    - do not log on undefined table error
+
 ## [3.0.9] - 2025-05-01
 
 ### Chore
