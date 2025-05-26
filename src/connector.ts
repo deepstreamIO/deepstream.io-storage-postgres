@@ -334,7 +334,7 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
    * stdout
    */
   private checkError (error: any) {
-    if (error && error.code !== DATABASE_IS_STARTING_UP && error.code !== CONNECTION_REFUSED) {
+    if (error && error.code !== DATABASE_IS_STARTING_UP && error.code !== CONNECTION_REFUSED && error.code !== UNDEFINED_TABLE) {
       this.logger.error(EVENT.ERROR, error, { code: error.code })
     }
   }
