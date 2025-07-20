@@ -1,3 +1,11 @@
+## [3.0.11] - 2025-07-19
+
+### Fix
+    - delete statement
+
+### Chore
+    - Update deps
+
 ## [3.0.10] - 2025-05-26
 
 ### Fix
