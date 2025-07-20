@@ -134,7 +134,7 @@ export class Statements {
       execute ( 'SELECT COUNT(*) FROM ' || t ) into result;
       IF result = 0 THEN
         EXECUTE 'DROP TABLE ' || t || ' CASCADE;';
-        EXECUTE 'NOTIFY "' || schema || '", ''DESTROY_TABLE:' || tablename || ''';';
+        EXECUTE 'NOTIFY ' || schema || ', ''DESTROY_TABLE:' || tablename || ''';';
       END IF;
     END;
     $$ LANGUAGE plpgsql;
