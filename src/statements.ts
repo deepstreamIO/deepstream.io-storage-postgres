@@ -100,7 +100,7 @@ export class Statements {
     return `
       DELETE FROM "${params.schema}"."${params.table}"
       WHERE id = '${params.id}';
-      SELECT delete_if_empty('${params.schema}','${params.table}');`
+      SELECT delete_if_empty('"${params.schema}"','"${params.table}"');`
   }
 
   /**
