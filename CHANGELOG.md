@@ -1,3 +1,12 @@
+## [3.1.0] - 2026-05-04
+
+### Chore
+    - update deps
+
+### Breaking chenge
+
+    - this introduces a breaking change for users that call the connector from outside deepstream, the query API has changed.
+
 ## [3.0.12] - 2025-07-21
 
 ### Fix
