@@ -16,9 +16,6 @@ export class StdOutLogger extends DeepstreamPlugin implements DeepstreamLogger {
    * Consoles / Terminals as well as most log-managers and logging systems
    * consume messages from these streams
    */
-  constructor () {
-    super()
-  }
 
   public async whenReady (): Promise<void> {
     this.description = `${this.description} at level ${LOG_LEVEL[this.currentLogLevel]}`
@@ -75,15 +72,9 @@ export class StdOutLogger extends DeepstreamPlugin implements DeepstreamLogger {
     }
 
     const msg = `${namespace ? `${namespace} | ` : '' }${event} | ${logMessage} ${errorCode ? `| code: ${errorCode.code}` : ''}`
-    let outputStream
-
-    if (logLevel === LOG_LEVEL.ERROR || logLevel === LOG_LEVEL.WARN) {
-      outputStream = 'stderr'
-    } else {
-      outputStream = 'stdout'
-    }
-
-    (process as any)[outputStream].write(msg + EOL)
-
+    const stream = logLevel === LOG_LEVEL.ERROR || logLevel === LOG_LEVEL.WARN
+      ? process.stderr
+      : process.stdout
+    stream.write(msg + EOL)
   }
 }

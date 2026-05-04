@@ -1,6 +1,12 @@
 import { PostgresOptions, KeyParameters } from './connector'
 import { Dictionary } from 'ts-essentials'
 import { JSONObject } from '@deepstream/protobuf/dist/types/all'
+import { escapeIdentifier, escapeLiteral } from './utils'
+
+export interface PgStatement {
+  text: string
+  values: unknown[]
+}
 
 export class Statements {
   constructor (private options: PostgresOptions) {
@@ -9,30 +15,38 @@ export class Statements {
   /**
    * Create a new schema within the database.
    */
-  public createSchema (params: { name: string }) {
-    return `CREATE SCHEMA IF NOT EXISTS "${params.name}";`
+  public createSchema (params: { name: string }): PgStatement {
+    return {
+      text: `CREATE SCHEMA IF NOT EXISTS ${escapeIdentifier(params.name)};`,
+      values: []
+    }
   }
 
   /**
    * Deletes a schema and all the tables within it
    */
-  destroySchema (params: { name: string }) {
-    return `DROP SCHEMA "${params.name}" CASCADE;`
+  destroySchema (params: { name: string }): PgStatement {
+    return {
+      text: `DROP SCHEMA ${escapeIdentifier(params.name)} CASCADE;`,
+      values: []
+    }
   }
 
   /**
    * Create a deepstream key/value table within
    * a schema and update its owner
    */
-  createTable (params: KeyParameters) {
+  createTable (params: KeyParameters): PgStatement {
+    const schema = escapeIdentifier(params.schema)
+    const table = escapeIdentifier(params.table)
     const updateOn = []
 
-    if ( this.options.notifications.INSERT ) { updateOn.push( 'INSERT' ) }
-    if ( this.options.notifications.UPDATE ) { updateOn.push( 'UPDATE' ) }
-    if ( this.options.notifications.DELETE ) { updateOn.push( 'DELETE' ) }
+    if (this.options.notifications.INSERT) { updateOn.push('INSERT') }
+    if (this.options.notifications.UPDATE) { updateOn.push('UPDATE') }
+    if (this.options.notifications.DELETE) { updateOn.push('DELETE') }
 
-    let statement = `
-      CREATE TABLE "${params.schema}"."${params.table}"
+    let text = `
+      CREATE TABLE ${schema}.${table}
       (
           id text NOT NULL,
           version int DEFAULT 0,
@@ -45,70 +59,96 @@ export class Statements {
       TABLESPACE pg_default;`
 
     if (params.owner) {
-      statement += `
-    ALTER TABLE "${params.schema}"."${params.table}"
-    OWNER to "${params.owner}";
+      text += `
+    ALTER TABLE ${schema}.${table}
+    OWNER to ${escapeIdentifier(params.owner)};
     `
     }
 
     if (updateOn.length > 0) {
-      statement += `
-        CREATE TRIGGER "broadcast_update_${params.schema}_${params.table}"
-        AFTER ${updateOn.join( ' OR ' )} ON "${params.schema}"."${params.table}"
+      const trigger = escapeIdentifier(`broadcast_update_${params.schema}_${params.table}`)
+      text += `
+        CREATE TRIGGER ${trigger}
+        AFTER ${updateOn.join(' OR ')} ON ${schema}.${table}
         FOR EACH ROW EXECUTE PROCEDURE broadcast_update();`
     }
 
     if (this.options.notifications.CREATE_TABLE) {
-      statement += `NOTIFY "${params.schema}", 'CREATE_TABLE:${params.table}';`
+      text += `NOTIFY ${schema}, ${escapeLiteral(`CREATE_TABLE:${params.table}`)};`
     }
 
-    return statement
+    return { text, values: [] }
   }
 
   /**
    * Retrieves a value from a table
    */
-  public get (params: KeyParameters) {
-    return `
+  public get (params: KeyParameters): PgStatement {
+    return {
+      text: `
       SELECT val, version
-      FROM "${params.schema}"."${params.table}"
-      WHERE id='${params.id}';`
+      FROM ${escapeIdentifier(params.schema)}.${escapeIdentifier(params.table)}
+      WHERE id = $1;`,
+      values: [params.id]
+    }
   }
 
   /**
    * Creates a bulk UPSERT statement
    */
-  set (params: KeyParameters, writeBuffer: Dictionary<{ version: number, value: JSONObject }>) {
-    const valueStrings = []
+  set (params: KeyParameters, writeBuffer: Dictionary<{ version: number, value: JSONObject }>): PgStatement {
+    const valCast = this.options.useJsonb ? '::jsonb' : '::text'
+    const tuples: string[] = []
+    const values: unknown[] = []
 
     for (const key in writeBuffer) {
       const { version, value } = writeBuffer[key]
-      valueStrings.push(`('${key}',${version},'${JSON.stringify(value).replace(/'/g, "''")}')`)
+      const i = values.length
+      tuples.push(`($${i + 1}, $${i + 2}, $${i + 3}${valCast})`)
+      values.push(key, version, JSON.stringify(value))
     }
 
-    return `
-      INSERT INTO "${params.schema}"."${params.table}" (id, version, val)
-      VALUES ${valueStrings.join(',')}
+    return {
+      text: `
+      INSERT INTO ${escapeIdentifier(params.schema)}.${escapeIdentifier(params.table)} (id, version, val)
+      VALUES ${tuples.join(',')}
       ON CONFLICT (id)
-      DO UPDATE SET val = EXCLUDED.val, version = EXCLUDED.version;`
+      DO UPDATE SET val = EXCLUDED.val, version = EXCLUDED.version;`,
+      values
+    }
   }
 
   /**
    * Deletes a value from a table
    */
-  public delete (params: KeyParameters) {
-    return `
-      DELETE FROM "${params.schema}"."${params.table}"
-      WHERE id = '${params.id}';
-      SELECT delete_if_empty('"${params.schema}"','"${params.table}"');`
+  public delete (params: KeyParameters): PgStatement {
+    return {
+      text: `
+      DELETE FROM ${escapeIdentifier(params.schema)}.${escapeIdentifier(params.table)}
+      WHERE id = $1;`,
+      values: [params.id]
+    }
+  }
+
+  /**
+   * Drops the given table if it has no rows left. Run after a delete
+   * so the cleanup sees the post-DELETE state. The function reconstructs
+   * a regclass from the text args, so we pass already-quoted identifiers.
+   */
+  public deleteIfEmpty (params: { schema: string, table: string }): PgStatement {
+    return {
+      text: 'SELECT delete_if_empty($1, $2);',
+      values: [escapeIdentifier(params.schema), escapeIdentifier(params.table)]
+    }
   }
 
   /**
    * Initialises the database and creates stored- and trigger-procedures
    */
-  public initDb (schema: string) {
-    return `
-    CREATE SCHEMA IF NOT EXISTS "${schema}";
+  public initDb (schema: string): PgStatement {
+    return {
+      text: `
+    CREATE SCHEMA IF NOT EXISTS ${escapeIdentifier(schema)};
 
     CREATE OR REPLACE FUNCTION
     count_rows(schema text, tablename text) returns integer
@@ -152,9 +192,9 @@ export class Statements {
         RETURN NULL;
      END;
      $$ LANGUAGE plpgsql;
-
-    SELECT version()
-    `
+    `,
+      values: []
+    }
   }
 
   /**
@@ -162,13 +202,16 @@ export class Statements {
    * a given schema and the
    * numbers of entries within them
    */
-  public getOverview ( params: { schema: string } ) {
-    return `
+  public getOverview (params: { schema: string }): PgStatement {
+    return {
+      text: `
     SELECT
       table_name AS table,
-      count_rows('${params.schema}', table_name) AS entries
+      count_rows($1, table_name) AS entries
     FROM information_schema.tables
     WHERE
-      table_schema = '${params.schema}'`
+      table_schema = $1`,
+      values: [params.schema]
+    }
   }
 }

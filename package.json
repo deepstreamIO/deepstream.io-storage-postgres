@@ -5,10 +5,11 @@
   "main": "dist/src/connector.js",
   "scripts": {
     "tsc": "tsc",
-    "lint": "tslint --project .",
+    "lint": "eslint src test",
     "lint:fix": "npm run lint -- --fix",
     "test": "npm run tsc && mocha --config=.mocharc.json 'dist/test/*.spec.js' --exit",
-    "docker": "docker run -p 5432:5432 -e POSTGRES_PASSWORD=mysecretpassword postgres"
+    "docker": "docker run -p 5432:5432 -e POSTGRES_PASSWORD=mysecretpassword postgres",
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
@@ -28,29 +29,23 @@
   ],
   "homepage": "https://deepstream.io/tutorials/integrations/db-postgres/",
   "dependencies": {
-    "pg": "^8.15.6",
-    "pg-escape": "^0.2.0"
+    "pg": "^8.15.6"
   },
   "devDependencies": {
     "@deepstream/protobuf": "^1.0.8",
     "@deepstream/types": "^2.3.2",
+    "@stylistic/eslint-plugin": "^5.10.0",
     "@types/chai": "^5.2.1",
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.15.3",
     "@types/pg": "^8.11.14",
     "chai": "^5.2.0",
-    "husky": "^4.2.5",
+    "eslint": "^10.3.0",
+    "husky": "^9.1.7",
     "mocha": "^11.2.2",
     "ts-essentials": "^10.0.4",
-    "ts-lint": "^4.5.1",
     "ts-node": "^10.9.2",
-    "tslint": "^6.1.3",
-    "typescript": "^5.8.3"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm run lint && npm run tsc",
-      "pre-push": "npm run tsc"
-    }
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.1"
   }
 }

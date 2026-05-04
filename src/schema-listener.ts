@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events'
 import * as pg from 'pg'
 import { EVENT, NamespacedLogger } from '@deepstream/types'
+import { escapeIdentifier } from './utils'
 
 export type NotificationCallback = ({ event, table, key }: { event: string, table: string, key: string }) => void
 export type Noop = (error: Error | null) => void
@@ -46,7 +47,7 @@ export class SchemaListener {
     }
 
     if (this.emitter.listenerCount(schema) === 0) {
-      this.client.query(`UNLISTEN ${schema};`, [], done)
+      this.client.query(`UNLISTEN ${escapeIdentifier(schema)};`, [], done)
     }
   }
 
@@ -109,7 +110,7 @@ export class SchemaListener {
    */
   private subscribeToSchema (schema: string, done: Noop) {
     if (this.client) {
-      this.client.query(`LISTEN ${schema};`, done)
+      this.client.query(`LISTEN ${escapeIdentifier(schema)};`, done)
     } else {
       this.connect(this.subscribeToSchema.bind(this, schema, done))
     }

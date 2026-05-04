@@ -27,9 +27,9 @@ const settings = {
 const services = {
   logger: {
     getNameSpace: () => ({
-      // tslint:disable-next-line: no-console
+      // eslint-disable-next-line no-console
       info: console.log,
-      // tslint:disable-next-line: no-console
+      // eslint-disable-next-line no-console
       error: console.error
     })
   }
@@ -475,7 +475,7 @@ describe('connector', () => {
       try {
         await dbConnector.destroySchema(settings.schema)
         throw new Error('An error should have been thrown')
-      } catch (e) {
+      } catch {
       }
     })
 

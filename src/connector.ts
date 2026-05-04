@@ -2,9 +2,9 @@ import * as pg from 'pg'
 import * as pkg from '../package.json'
 import { DeepstreamPlugin, DeepstreamStorage, NamespacedLogger, DeepstreamServices, StorageWriteCallback, StorageReadCallback, EVENT } from '@deepstream/types'
 import { DeepPartial, Dictionary } from 'ts-essentials'
-import { Statements } from './statements'
+import { Statements, PgStatement } from './statements'
 import { SchemaListener, Noop, NotificationCallback } from './schema-listener'
-import { checkVersion, parseDSKey } from './utils'
+import { parseDSKey } from './utils'
 import { StdOutLogger } from './std-out-logger'
 import { WriteOperation } from './write-operation'
 import { JSONObject } from '@deepstream/protobuf/dist/types/all'
@@ -60,6 +60,10 @@ const INTERNAL_ERROR = 'XX000'
 const DATABASE_IS_STARTING_UP = '57P03'
 const CONNECTION_REFUSED = 'ECONNREFUSED'
 
+const INIT_MAX_ATTEMPTS = 10
+const INIT_BASE_DELAY_MS = 100
+const INIT_MAX_DELAY_MS = 5000
+
 /**
  * Class deepstream.io postgres database connector
  */
@@ -89,10 +93,22 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
   }
 
   init () {
-    this.connectionPool = new pg.Pool(this.options)
+    this.connectionPool = new pg.Pool(this.poolConfig())
     this.connectionPool.on('error', this.checkError.bind(this))
     this.schemaListener = new SchemaListener(this.connectionPool, this.logger)
     this.flushInterval = setInterval(this.flushWrites.bind(this), this.options.writeInterval)
+  }
+
+  private poolConfig (): pg.PoolConfig {
+    return {
+      user: this.options.user,
+      password: this.options.password,
+      host: this.options.host,
+      port: this.options.port,
+      database: this.options.database,
+      max: this.options.max,
+      idleTimeoutMillis: this.options.idleTimeoutMillis
+    }
   }
 
   public async whenReady (): Promise<void> {
@@ -127,10 +143,10 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
     const statement = this.statements.createSchema({ name })
     if (!callback) {
       return new Promise<void>((resolve, reject) => {
-        this.query(statement, (err) => err ? reject(err) : resolve(), [], true)
+        this.query(statement, (err) => err ? reject(err) : resolve(), true)
       })
     }
-    this.query(statement, callback, [], true)
+    this.query(statement, callback, true)
   }
 
   /**
@@ -141,27 +157,36 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
     const statement = this.statements.destroySchema({ name })
     if (!callback) {
       return new Promise<void>((resolve, reject) => {
-        this.query(statement, (err) => err ? reject(err) : resolve(), [], true)
+        this.query(statement, (err) => err ? reject(err) : resolve(), true)
       })
     }
-    this.query(statement, callback, [], true)
+    this.query(statement, callback, true)
   }
 
   /**
    * Returns a list of all the tables within a given schema
    * and the number of entries within each table
    */
-  public getSchemaOverview (schema: string): Promise<Dictionary<number>>
+  public getSchemaOverview (schema?: string): Promise<Dictionary<number>>
   public getSchemaOverview (callback: SchemaOverviewCallback, schema?: string): void
-  public getSchemaOverview (callbackOrName: string | SchemaOverviewCallback = this.options.schema, schema?: string): Promise<Dictionary<number>| void> | void {
-    if (typeof callbackOrName === 'string' || callbackOrName === undefined) {
-      return new Promise((resolve, reject) => {
-        this.getOverview(callbackOrName ? callbackOrName : this.options.schema, (error, tables) => {
-          return error ? reject(error) : resolve(tables)
-        })
-      })
+  public getSchemaOverview (
+    arg1?: string | SchemaOverviewCallback,
+    arg2?: string
+  ): Promise<Dictionary<number>> | void {
+    if (typeof arg1 === 'function') {
+      this.getOverview(arg2 ?? this.options.schema, arg1)
+      return
     }
-    this.getOverview(schema ? schema : this.options.schema, callbackOrName)
+    const target = arg1 ?? this.options.schema
+    return new Promise((resolve, reject) => {
+      this.getOverview(target, (error, tables) => {
+        if (error || !tables) {
+          reject(error ?? new Error('no tables returned'))
+        } else {
+          resolve(tables)
+        }
+      })
+    })
   }
 
   private getOverview (schema: string, callback: SchemaOverviewCallback) {
@@ -176,7 +201,7 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
         tables[result.rows[i].table] = result.rows[i].entries
       }
       callback(null, tables)
-    }, [], true)
+    }, true)
   }
 
   /**
@@ -224,7 +249,7 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
   * Retrieves a value from the database
   */
   public get (key: string, callback: StorageReadCallback) {
-    this.query<{ id: string, version: number, value: string }>(
+    this.query<{ version: number, val: string | JSONObject }>(
       this.statements.get(parseDSKey(key, this.options)),
       (error: any, result) => {
         if (error && error.code === UNDEFINED_TABLE) {
@@ -244,7 +269,7 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
           }
           callback(null, version, val)
         }
-      }, [], true)
+      }, true)
   }
 
   /**
@@ -252,18 +277,26 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
   * it will also delete the table itself
   */
   public delete (key: string, callback: StorageWriteCallback) {
-    const statement = this.statements.delete(parseDSKey(key, this.options))
-    this.query(statement, (error) => callback(error ? error.toString() : null), [], false)
+    const params = parseDSKey(key, this.options)
+    this.query(this.statements.delete(params), (deleteError) => {
+      if (deleteError) {
+        callback(deleteError.toString())
+        return
+      }
+      this.query(this.statements.deleteIfEmpty(params), (cleanupError) => {
+        callback(cleanupError ? cleanupError.toString() : null)
+      }, false)
+    }, false)
   }
 
-  public deleteBulk (recordNames: string[], callback: StorageWriteCallback): void {
+  public deleteBulk (_recordNames: string[], _callback: StorageWriteCallback): void {
     throw new Error('Method not implemented.')
   }
 
   /**
    * Low level interface to execute postgreSQL queries.
    */
-  public query<Result extends pg.QueryResultRow> (query: string, callback: (err: Error, result?: pg.QueryResult<any>) => void, args: any[] = [], silent: boolean = false) {
+  public query<Result extends pg.QueryResultRow> (statement: PgStatement, callback: (err: Error | null, result?: pg.QueryResult<Result>) => void, silent: boolean = false) {
     this.connectionPool.connect((error, client, done) => {
       this.checkError(error)
       if (error) {
@@ -271,7 +304,7 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
         return
       }
       if (client) {
-        client.query<Result>(query, args, (queryError, result) => {
+        client.query<Result>(statement.text, statement.values, (queryError, result) => {
           done()
           if (!silent) {
             this.checkError(queryError)
@@ -301,32 +334,31 @@ export class Connector extends DeepstreamPlugin implements DeepstreamStorage {
 
   /**
    * Initialises the connector by creating a first connection
-   * to the db and execute a setup statement creating the initial
+   * to the db and executing a setup statement creating the initial
    * global tables.
-   *
-   * As a final step this checks that the postgres version is >= 9.5
-   * which is the first version to support the ON CONFLICT statement
-   * for UPSERTS
    */
   public initialise (callback: Noop) {
-    this.query<any>(this.statements.initDb(this.options.schema), (error: any, result) => {
+    this.attemptInitialise(callback, 0)
+  }
+
+  private attemptInitialise (callback: Noop, attempt: number) {
+    this.query<any>(this.statements.initDb(this.options.schema), (error: any) => {
       if (error) {
         // retry for errors caused by concurrent initialisation
         // or when the DB can't be reached (e.g. it's still starting up in a Docker setup)
-        if (error.code === INTERNAL_ERROR ||
+        const isTransient = error.code === INTERNAL_ERROR ||
           error.code === DATABASE_IS_STARTING_UP ||
-          error.code === CONNECTION_REFUSED) {
-          this.initialise(callback)
-          return
-        } else {
-          callback(error)
+          error.code === CONNECTION_REFUSED
+        if (isTransient && attempt < INIT_MAX_ATTEMPTS) {
+          const delay = Math.min(INIT_BASE_DELAY_MS * 2 ** attempt, INIT_MAX_DELAY_MS)
+          setTimeout(() => this.attemptInitialise(callback, attempt + 1), delay)
           return
         }
+        callback(error)
+        return
       }
-
-      checkVersion((result as any)[4].rows[0].version)
       callback(null)
-    }, [], true)
+    }, true)
   }
 
   /**
